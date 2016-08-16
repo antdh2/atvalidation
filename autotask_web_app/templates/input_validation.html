@@ -219,12 +219,8 @@
                                                       <td style="display: flex">
                                                           <!-- <a href="javascript:;" class="btn btn-outline btn-circle btn-sm green">
                                                               <i class="fa fa-edit"></i> Edit </a> -->
-                                                          <form method="POST", name="existing_validations_delete_form", id="existing_validations_delete_form">
-                                                            {% csrf_token %}
-                                                            <input type="hidden" name="existing_validations_delete" value="{{ validation.id }}">
-                                                            <a onclick="document.forms['existing_validations_delete_form'].submit();" class="btn btn-outline btn-circle red btn-sm black">
+                                                            <a href="{% url 'delete_validation_group' validation_group.id %}" class="btn btn-outline btn-circle red btn-sm black">
                                                               <i class="fa fa-trash-o"></i> Delete </a>
-                                                          </form>
                                                       </td>
                                                   </tr>
                                                   {% endfor %}

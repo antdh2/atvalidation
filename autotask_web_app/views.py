@@ -45,7 +45,9 @@ def handle_user_save(sender, instance, created, **kwargs):
 #
 ############################################################
 input_validation_dict = {}
+@subscription_payment_required
 def input_validation(request, id):
+    page = 'validation'
     step = 1
     if request.user:
         at = autotask_login_function(request, request.user.profile.autotask_username, request.user.profile.autotask_password)
@@ -73,13 +75,13 @@ def input_validation(request, id):
             input_validation_dict['ValidationGroupId'] = validation_group.id
             input_validation_dict['ValidationGroup'] = validation_group
             entity_attributes = at.new(input_validation_dict['EntityName'])
-            return render(request, 'input_validation.html', {"entitytypes": entitytypes, "ACCOUNT_TYPES": ACCOUNT_TYPES, "OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "values": values, "selected_key": selected_key, "existing_validations": existing_validations, "input_validation_dict": input_validation_dict, "existing_validation_groups": existing_validation_groups})
+            return render(request, 'input_validation.html', {"page": page, "entitytypes": entitytypes, "ACCOUNT_TYPES": ACCOUNT_TYPES, "OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "values": values, "selected_key": selected_key, "existing_validations": existing_validations, "input_validation_dict": input_validation_dict, "existing_validation_groups": existing_validation_groups})
         if request.POST.get('step2-keyselect', False):
             step = 3
             key = request.POST['key']
             selected_key = key
             values = Picklist.objects.filter(profile=request.user.profile, key__icontains=input_validation_dict['EntityName'] + "_" + key)
-            return render(request, 'input_validation.html', {"entitytypes": entitytypes, "ACCOUNT_TYPES": ACCOUNT_TYPES, "OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "values": values, "selected_key": selected_key, "existing_validations": existing_validations, "input_validation_dict": input_validation_dict, "existing_validation_groups": existing_validation_groups})
+            return render(request, 'input_validation.html', {"page": page, "entitytypes": entitytypes, "ACCOUNT_TYPES": ACCOUNT_TYPES, "OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "values": values, "selected_key": selected_key, "existing_validations": existing_validations, "input_validation_dict": input_validation_dict, "existing_validation_groups": existing_validation_groups})
         if request.POST.get('step2', False):
             step = 3
             key = request.POST['selected_key']
@@ -94,14 +96,19 @@ def input_validation(request, id):
                 picklist = -100
             entity = Entity.objects.get(name="Ticket")
             validation = Validation.objects.create(profile=request.user.profile, key=key, value=value, operator=operator, entity=entity, picklist_number=picklist, validation_group=input_validation_dict['ValidationGroup'])
-            return render(request, 'input_validation.html', {"entitytypes": entitytypes, "ACCOUNT_TYPES": ACCOUNT_TYPES, "OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "existing_validations": existing_validations, "input_validation_dict": input_validation_dict, "existing_validation_groups": existing_validation_groups})
-        if request.POST.get('existing_validations_delete', False):
-            validation_to_delete = Validation.objects.get(id=request.POST['existing_validations_delete'])
-            validation_to_delete.delete()
-    return render(request, 'input_validation.html', {"entitytypes": entitytypes, "ACCOUNT_TYPES": ACCOUNT_TYPES, "OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "existing_validations": existing_validations, "input_validation_dict": input_validation_dict, "existing_validation_groups": existing_validation_groups})
+            return render(request, 'input_validation.html', {"page": page, "entitytypes": entitytypes, "ACCOUNT_TYPES": ACCOUNT_TYPES, "OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "existing_validations": existing_validations, "input_validation_dict": input_validation_dict, "existing_validation_groups": existing_validation_groups})
+    return render(request, 'input_validation.html', {"page": page, "entitytypes": entitytypes, "ACCOUNT_TYPES": ACCOUNT_TYPES, "OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "existing_validations": existing_validations, "input_validation_dict": input_validation_dict, "existing_validation_groups": existing_validation_groups})
+
+
+def delete_validation_group(request, id):
+    userid = request.user.id
+    validation_group = ValidationGroup.objects.get(id=id)
+    validation_group.delete()
+    messages.add_message(request, messages.SUCCESS, '{} validation group deleted.'.format(validation_group.name))
+    return redirect('input_validation', userid)
+
 
 def profile(request, id):
-    module = 'validation'
     page = 'profile'
     # First we must connect to autotask using valid credentials
     if request.method == "POST":
@@ -119,44 +126,26 @@ def profile(request, id):
             at = autotask_login_function(request, username, password)
             if at:
                 messages.add_message(request, messages.SUCCESS, 'Successfully logged in. You may now search for an Autotask account.')
-                return render(request, 'index.html', {"module": module, "page": page, "at": at})
+                return render(request, 'index.html', {"page": page, "at": at})
             else:
-                return render(request, 'account/profile.html', {"module": module, "page": page, "at": at, "profile": profile})
-
-    # Now figure out sales figures
-    upsells = Upsell.objects.filter(profile=request.user.profile)
-    total_revenue = 0
-    total_profit = 0
-    for upsell in upsells:
-        total_revenue += upsell.product_price
-        x = upsell.product_price - upsell.product_cost
-        total_profit += x
-    return render(request, 'account/profile.html', {"total_revenue": round(total_revenue,2), "upsells": upsells.count, "total_profit": round(total_profit,2)})
+                return render(request, 'account/profile.html', {"page": page, "at": at, "profile": profile})
+    return render(request, 'account/profile.html', {"page": page})
 
 @login_required(login_url='/account/login/')
 def index(request):
     try:
-        module = 'crm'
-        page = 'search-for-account'
+        page = 'index'
         accounts = None
         at = None
         if request.user:
             at = autotask_login_function(request, request.user.profile.autotask_username, request.user.profile.autotask_password)
-        # Once an account name/id is entered
-        if request.method == "POST":
-            # map account_id to the inputted value
-            account_name = request.POST['account-name']
-            accounts = resolve_account_name(account_name)
-            #account_id = resolve_account_id(account_name)
-            # then get autotask account using that ID
-        else:
-            accounts = None
 
-        return render(request, 'index.html', {"accounts": accounts, "page": page, "module": module, "at": at, "ACCOUNT_TYPES": ACCOUNT_TYPES})
+        return render(request, 'index.html', {"accounts": accounts, "page": page, "at": at, "ACCOUNT_TYPES": ACCOUNT_TYPES})
     except AttributeError:
-        messages.add_message(request, messages.ERROR, 'Lost connection with Autotask.')
+        messages.add_message(request, messages.ERROR, 'No connection with Autotask. Please ensure your Autotask credentials are entered in your profile page.')
         return render(request, 'index.html', {"at": at, "ACCOUNT_TYPES": ACCOUNT_TYPES})
 
+create_ticket_dict = {}
 @login_required(login_url='/account/login/')
 def create_ticket(request, id):
     # First we must check we have a logged in user then ensure we're connected to AT
@@ -182,29 +171,30 @@ def create_ticket(request, id):
     contracts = get_contracts(account_id)
     # Grab all validation groups for this user
     validation_groups = ValidationGroup.objects.filter(profile=request.user.profile)
-    selected_validation_group = None
-    sel_val_group_name = None
+
+    validated = True
     if request.method == "POST":
         # First we must check to see if user has selected to apply validation groups
         if request.POST.get('apply_validation', False):
             # Grab the selected validation group from form
-            selected_validation_group = request.POST['validation-group-name']
+            create_ticket_dict['SelectedValidationGroup'] = request.POST['validation-group-name']
             # Format hidden field info to redisplay info to user
             for group in validation_groups:
                 if request.POST['validation-group-name'] == str(group.id):
-                    sel_val_group_name = group.name
+                    create_ticket_dict['SelectedValidationGroupName'] = group.name
             # Then refresh the page with our validation group
-            return render(request, 'create_ticket.html', {"contacts": contacts, "sel_val_group_name": sel_val_group_name, "services": services, "allocation_codes": allocation_codes, "contracts": contracts, "roles": roles, "resources": resources, "account_types": account_types, "statuses": statuses, "priorities": priorities, "queue_ids": queue_ids, "ticket_sources": ticket_sources, "issue_types": issue_types, "sub_issue_types": sub_issue_types, "slas": slas, "ticket_types": ticket_types, "selected_validation_group": selected_validation_group, "ataccount": ataccount, "PRIORITY": PRIORITY, "QUEUE_IDS": QUEUE_IDS, "STATUS": STATUS, "validation_groups": validation_groups})
+            return render(request, 'create_ticket.html', {"create_ticket_dict": create_ticket_dict, "contacts": contacts, "services": services, "allocation_codes": allocation_codes, "contracts": contracts, "roles": roles, "resources": resources, "account_types": account_types, "statuses": statuses, "priorities": priorities, "queue_ids": queue_ids, "ticket_sources": ticket_sources, "issue_types": issue_types, "sub_issue_types": sub_issue_types, "slas": slas, "ticket_types": ticket_types, "ataccount": ataccount, "PRIORITY": PRIORITY, "QUEUE_IDS": QUEUE_IDS, "STATUS": STATUS, "validation_groups": validation_groups})
+
         # If we have a selected validation group, then lets go ahead and check for validations using that group
-        if selected_validation_group:
-            validated = validate_input(request, selected_validation_group)
+        if create_ticket_dict['SelectedValidationGroup']:
+            validated = validate_input(request, create_ticket_dict['SelectedValidationGroup'])
         # if validation fails then return to webpage with an error message (this is handled by function call)
         if not validated:
-            return render(request, 'create_ticket.html', {"contacts": contacts, "sel_val_group_name": sel_val_group_name, "services": services, "allocation_codes": allocation_codes, "contracts": contracts, "roles": roles, "resources": resources, "account_types": account_types, "statuses": statuses, "priorities": priorities, "queue_ids": queue_ids, "ticket_sources": ticket_sources, "issue_types": issue_types, "sub_issue_types": sub_issue_types, "slas": slas, "ticket_types": ticket_types, "selected_validation_group": selected_validation_group, "ataccount": ataccount, "PRIORITY": PRIORITY, "QUEUE_IDS": QUEUE_IDS, "STATUS": STATUS, "validation_groups": validation_groups})
+            return render(request, 'create_ticket.html', {"create_ticket_dict": create_ticket_dict, "contacts": contacts, "services": services, "allocation_codes": allocation_codes, "contracts": contracts, "roles": roles, "resources": resources, "account_types": account_types, "statuses": statuses, "priorities": priorities, "queue_ids": queue_ids, "ticket_sources": ticket_sources, "issue_types": issue_types, "sub_issue_types": sub_issue_types, "slas": slas, "ticket_types": ticket_types, "ataccount": ataccount, "PRIORITY": PRIORITY, "QUEUE_IDS": QUEUE_IDS, "STATUS": STATUS, "validation_groups": validation_groups})
         # if we pass validation, previous line of code is not run and a ticket is created
         new_ticket = ticket_create_new(True,
             AccountID = account_id,
-            AEMAlertID = request.POST['AEMAlertID'],
+            AEMAlertID = request.POST.get('AEMAlertID', False),
             AllocationCodeID = request.POST['AllocationCodeID'],
             AssignedResourceID = request.POST['AssignedResourceID'],
             AssignedResourceRoleID = request.POST['AssignedResourceRoleID'],
@@ -253,7 +243,7 @@ def create_ticket(request, id):
             Title = request.POST['title'],
         )
         messages.add_message(request, messages.SUCCESS, ('Ticket - ' + new_ticket.TicketNumber + ' - ' + new_ticket.Title + ' created.'))
-    return render(request, 'create_ticket.html', {"contacts": contacts, "sel_val_group_name": sel_val_group_name, "services": services, "allocation_codes": allocation_codes, "contracts": contracts, "roles": roles, "resources": resources, "account_types": account_types, "statuses": statuses, "priorities": priorities, "queue_ids": queue_ids, "ticket_sources": ticket_sources, "issue_types": issue_types, "sub_issue_types": sub_issue_types, "slas": slas, "ticket_types": ticket_types, "selected_validation_group": selected_validation_group, "ataccount": ataccount, "PRIORITY": PRIORITY, "QUEUE_IDS": QUEUE_IDS, "STATUS": STATUS, "validation_groups": validation_groups})
+    return render(request, 'create_ticket.html', {"create_ticket_dict": create_ticket_dict, "contacts": contacts, "services": services, "allocation_codes": allocation_codes, "contracts": contracts, "roles": roles, "resources": resources, "account_types": account_types, "statuses": statuses, "priorities": priorities, "queue_ids": queue_ids, "ticket_sources": ticket_sources, "issue_types": issue_types, "sub_issue_types": sub_issue_types, "slas": slas, "ticket_types": ticket_types, "ataccount": ataccount, "PRIORITY": PRIORITY, "QUEUE_IDS": QUEUE_IDS, "STATUS": STATUS, "validation_groups": validation_groups})
 
 create_home_user_ticket_dict = {}
 @login_required(login_url='/account/login/')

@@ -47,19 +47,6 @@ $(document).ready(function () {
 <div class="page-content-wrapper">
   <!-- BEGIN CONTENT BODY -->
   <div class="page-content">
-      <!-- BEGIN PAGE HEADER-->
-      <h1 class="page-title"> Autotask Validator</h1>
-      <!-- END PAGE HEADER-->
-      {% if messages %}
-        {% for message in messages %}
-          <div class="alert{% if message.tags == 'error' %} alert-danger {% elif message.tags %} alert-{{ message.tags }}"{% endif %}>
-            <ul class="messages">
-              <p>{{ message }}</p>
-            </ul>
-          </div>
-        {% endfor %}
-      {% endif %}
-
     <div class="portlet light portlet-fit ">
       <div class="portlet-title">
         <div class="caption">
@@ -76,8 +63,8 @@ $(document).ready(function () {
               <input type="hidden" name="apply_validation" value="apply_validation">
               <h6 class="card-header primary-color white-text">Apply validation group?</strong></h6>
               <select class="form-control" name="validation-group-name"  onchange="apply_validation_form.submit();">
-                {% if selected_validation_group %}
-                  <option value="{{ selected_validation_group }}">{{ sel_val_group_name }} - Selected</option>
+                {% if create_ticket_dict.SelectedValidationGroup %}
+                  <option value="{{ create_ticket_dict.SelectedValidationGroup.id }}">{{ create_ticket_dict.SelectedValidationGroupName }} - Selected</option>
                   <option data-divider="true"></option>
                 {% else %}
                   <option value="">No Validation Group Selected</option>
