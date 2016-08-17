@@ -103,8 +103,12 @@ def input_validation(request, id):
 def delete_validation_group(request, id):
     userid = request.user.id
     validation_group = ValidationGroup.objects.get(id=id)
-    validation_group.delete()
-    messages.add_message(request, messages.SUCCESS, '{} validation group deleted.'.format(validation_group.name))
+    # We must validate that the validation group belongs to this user
+    if validation_group.profile == request.user.profile:
+        validation_group.delete()
+        messages.add_message(request, messages.SUCCESS, '{} validation group deleted.'.format(validation_group.name))
+    else:
+        messages.add_message(request, messages.ERROR, '{} is not your validation group.'.format(validation_group.name))
     return redirect('input_validation', userid)
 
 
