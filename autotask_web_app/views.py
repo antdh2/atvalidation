@@ -44,6 +44,10 @@ def handle_user_save(sender, instance, created, **kwargs):
 # All views must go inside of here
 #
 ############################################################
+
+def home(request):
+    return render(request, 'home.html', {})
+
 input_validation_dict = {}
 @subscription_payment_required
 def input_validation(request, id):
