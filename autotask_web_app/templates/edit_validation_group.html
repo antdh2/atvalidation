@@ -12,7 +12,7 @@
                 <div class="portlet-title tabbable-line">
                     <div class="caption caption-md">
                         <i class="icon-globe theme-font hide"></i>
-                        <span class="caption-subject font-blue-madison bold uppercase">Configure Input Validation {% if step == 2 %} - {{ input_validation_dict.ValidationGroup.name }} {% endif %}</span>
+                        <span class="caption-subject font-blue-madison bold uppercase">Edit Validation Group - {{ validation_group.name }}</span>
                     </div>
                     <ul class="nav nav-tabs">
                         <li class="active">
@@ -28,53 +28,22 @@
                                 <div class="portlet-body">
                                     <div class="mt-element-step">
                                         <div class="row step-line">
-                                            <div class="col-md-4 mt-step-col first {% if step == 1 %} active {% else %} done {% endif %}">
-                                              <div class="mt-step-number bg-white font-grey">1</div>
-                                              <div class="mt-step-title uppercase font-grey-cascade">Validation Rule Details</div>
-                                              <div class="mt-step-content font-grey-cascade">Create a rule and specify entity</div>
-                                          </div>
-                                            <div class="col-md-4 mt-step-col  {% if step == 1 %} {% elif step == 2 %} active {% else %} done {% endif %}">
-                                                <div class="mt-step-number bg-white font-grey">2</div>
-                                                <div class="mt-step-title uppercase font-grey-cascade">Validation Details</div>
-                                                <div class="mt-step-content font-grey-cascade">Create custom validations</div>
+                                            <div class="col-md-12 mt-step-col first last {% if step == 1 %} active {% elif step == 2 %} done {% endif %}">
+                                                <div class="mt-step-number bg-white font-grey">1</div>
+                                                <div class="mt-step-title uppercase font-grey-cascade">Add New Validation</div>
+                                                <div class="mt-step-content font-grey-cascade">Create additional validations for this validation group</div>
                                             </div>
-                                            <div class="col-md-4 mt-step-col last {% if step == 1 %} {% elif step == 2 %} {% elif step == 3 %} active {% else %} done {% endif %}">
-                                                  <div class="mt-step-number bg-white font-grey">3</div>
-                                                  <div class="mt-step-title uppercase font-grey-cascade">Review</div>
-                                                  <div class="mt-step-content font-grey-cascade">Make sure you're happy</div>
-                                              </div>
                                         </div>
                                     </div>
-                                    <!-- Start Step 1 Form -->
-                                    {% if step == 1 %}
-                                    <div class="portlet-body" align="center">
-                                        <form action="{% url 'input_validation' user.id %}" method="post" style="width: 22.67%">
-                                          {% csrf_token %}
-                                          <input type="hidden" name="step1" value="step1">
-                                          <div class="form-group">
-                                            <input class="form-control" type="text" name="validation-group-name" placeholder="Validation Group Name"/>
-                                          </div>
-                                          <select name="entitytype" class="form-control">
-                                            {% for entity in entitytypes %}
-                                                <option  value="{{ entity.name }}">{{ entity.name }}</option>
-                                            {% endfor %}
-                                          </select>
-                                          <br>
-                                          <input type="submit" style="margin-top: 10px;" />
-                                        </form>
-                                    </div>
-                                  {% endif %}
-                                </div>
-                        <!-- End Step 1 Form -->
                         <!-- Start Step 2 Form -->
-                        {% if step == 2 %}
+                        {% if step == 1 %}
                         <div class="portlet-body" align="center">
                               <div class="form-group">
                                 <div class="row">
                                   <div class="col-md-4">
-                                      <form action="{% url 'input_validation' user.id %}" method="POST" name="entityattributes">
+                                      <form action="{% url 'edit_validation_group' user.id validation_group.id %}" method="POST" name="entityattributes">
                                         {% csrf_token %}
-                                        <input type="hidden" name="step2-keyselect" value="step2-keyselect">
+                                        <input type="hidden" name="step1-keyselect" value="step1-keyselect">
                                         <label for="key">Attribute</label>
                                         <select name="key" class="form-control" onchange="entityattributes.submit();">
                                           {% if selected_key %}
@@ -88,9 +57,9 @@
                                       </form>
                                   </div>
                                   <div class="col-md-4">
-                                    <form action="{% url 'input_validation' user.id %}" method="post" style="width: 22.67%" name="">
+                                    <form action="{% url 'edit_validation_group' user.id validation_group.id %}" method="post" style="width: 22.67%" name="">
                                       {% csrf_token %}
-                                      <input type="hidden" name="step2" value="step2">
+                                      <input type="hidden" name="step1" value="step1">
                                       <input type="hidden" name="selected_key" value="{{ selected_key }}">
                                       {% csrf_token %}
                                       <label for="operator">Operator</label>
@@ -102,6 +71,7 @@
                                   </div>
                                   <div class="col-md-4">
                                     {% if values %}
+                                    {{ values }}
                                     <label for="value">Value</label>
                                     <select name="value" class="form-control">
                                       {% for value in values %}
@@ -123,12 +93,12 @@
                     </div>
             <!-- End Step 2 Form -->
             <!-- Start Step 3 Form -->
-            {% if step == 3 %}
+            {% if step == 2 %}
             <div class="portlet-body" align="center">
                   <div class="form-group">
                     <div class="row">
                       <div class="col-md-4">
-                          <form action="{% url 'input_validation' user.id %}" method="POST" name="entityattributes">
+                          <form action="{% url 'edit_validation_group' user.id validation_group.id %}" method="POST" name="entityattributes">
                             {% csrf_token %}
                             <input type="hidden" name="step2-keyselect" value="step2-keyselect">
                             <label for="key">Attribute</label>
@@ -144,7 +114,7 @@
                           </form>
                       </div>
                       <div class="col-md-4">
-                        <form action="{% url 'input_validation' user.id %}" method="post" style="width: 22.67%" name="">
+                        <form action="{% url 'edit_validation_group' user.id validation_group.id %}" method="post" style="width: 22.67%" name="">
                           {% csrf_token %}
                           <input type="hidden" name="step2" value="step2">
                           <input type="hidden" name="selected_key" value="{{ selected_key }}">
@@ -161,7 +131,7 @@
                         <label for="value">Value</label>
                         <select name="value" class="form-control">
                           {% for value in values %}
-                            <option value="{{ value.key }} {{ value.id }}">{{ value.key }} {{ value.ContractName }}</option>
+                              <option value="{{ value.key }}">{{ value.key }}</option>
                           {% endfor %}
                         </select>
                         {% else %}
@@ -176,14 +146,13 @@
                 </form>
             </div>
             {% endif %}
-            {% if existing_validation_groups %}
             <div class="row">
                 <div class="col-md-12">
                     <div class="portlet light ">
                         <div class="portlet-title tabbable-line">
                             <div class="caption caption-md">
                                 <i class="icon-globe theme-font hide"></i>
-                                <span class="caption-subject font-blue-madison bold uppercase">Existing Validation Groups</span>
+                                <span class="caption-subject font-blue-madison bold uppercase">Existing Validations for Group</span>
                             </div>
                         </div>
                         <div class="portlet-body">
@@ -195,31 +164,23 @@
                                               <thead>
                                                   <tr>
                                                       <th>Entity</th>
-                                                      <th class="hidden-xs">Name</th>
-                                                      {% if existing_validations %}
-                                                      <th>Rules</th>
-                                                      {% endif %}
+                                                      <th>Key</th>
+                                                      <th>Operator</th>
+                                                      <th>Value</th>
                                                       <th>Actions</th>
                                                   </tr>
                                               </thead>
                                               <tbody>
-                                                {% for validation_group in existing_validation_groups %}
+                                                {% for validation in existing_validations %}
                                                   <tr>
-                                                      <td class="">{{ validation_group.entity.name }}</td>
-                                                      <td class="">{{ validation_group.name }}</td>
-                                                      {% if existing_validations %}
-                                                      <td>
-                                                      {% for validation in existing_validations %}
-                                                        {% if validation.validation_group_id == validation_group.id %}
-                                                          {{ validation.key }} {{ validation.operator }} {{ validation.value }}<br>
-                                                        {% endif %}
-                                                      {% endfor %}
-                                                      {% endif %}
-                                                      </td>
+                                                      <td class="">{{ validation.entity.name }}</td>
+                                                      <td class="">{{ validation.key }}</td>
+                                                      <td class="">{{ validation.operator }}</td>
+                                                      <td class="">{{ validation.value }}</td>
                                                       <td style="display: flex">
-                                                          <a href="{% url 'edit_validation_group' user.id validation_group.id %}" class="btn btn-outline btn-circle btn-sm green">
-                                                              <i class="fa fa-edit"></i> Edit </a>
-                                                            <a href="{% url 'delete_validation_group' validation_group.id %}" class="btn btn-outline btn-circle red btn-sm black">
+                                                          <!-- <a href="javascript:;" class="btn btn-outline btn-circle btn-sm green">
+                                                              <i class="fa fa-edit"></i> Edit </a> -->
+                                                            <a href="{% url 'delete_validation' validation.id %}" class="btn btn-outline btn-circle red btn-sm black">
                                                               <i class="fa fa-trash-o"></i> Delete </a>
                                                       </td>
                                                   </tr>
@@ -233,7 +194,6 @@
                     </div>
                 </div>
             </div>
-            {% endif %}
         </div>
         <!-- End Step 3 Form -->
 

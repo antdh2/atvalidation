@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load staticfiles %}
 {% block page %}
-<script>
+<!-- <script>
 $(document).ready(function () {
 
 
@@ -42,7 +42,7 @@ $(document).ready(function () {
   });
 
 });
-</script>
+</script> -->
 <!-- BEGIN CONTENT -->
 <div class="page-content-wrapper">
   <!-- BEGIN CONTENT BODY -->
@@ -86,7 +86,7 @@ $(document).ready(function () {
                   {% csrf_token %}
                   <div class="form-group">
                     <label>Ticket Title</label>
-                    <input type="text" class="form-control" placeholder="Ticket Title" name="title" id="title" {% if title %} value="{{ title }}" {% endif %}></input>
+                    <input type="text" class="form-control" placeholder="Ticket Title" name="Title"></input>
                     <br>
                     <label>Ticket Contact</label>
                     <select class="form-control priority" name="ContactID">
@@ -100,12 +100,12 @@ $(document).ready(function () {
                   <br>
                   <div class="form-group">
                     <label>Ticket Description</label>
-                    <textarea class="form-control" rows="3" placeholder="Enter Ticket Description" name="description" id="description" {% if description %} value="{{ description }}" {% endif %}></textarea>
+                    <textarea class="form-control" rows="3" placeholder="Enter Ticket Description" name="Description"></textarea>
                   </div>
                   <div class="row">
                     <div class="col-md-6">
                       <label>Ticket Status</label>
-                      <select class="form-control" name="status" id="status">
+                      <select class="form-control" name="Status">
                         <option value="">Please select...</option>
                         <option value="">None</option>
                         {% for status in statuses %}
@@ -114,7 +114,7 @@ $(document).ready(function () {
                       </select>
                       <br>
                       <label>Ticket Priority</label>
-                      <select class="form-control priority" name="priority" id="priority">
+                      <select class="form-control priority" name="Priority">
                         <option value="">Please select...</option>
                         <option value="">None</option>
                         {% for priority in priorities %}
@@ -124,11 +124,11 @@ $(document).ready(function () {
                       <br>
                       <label>Ticket Due Date</label>
                       <div class="form-group" data-date-start-date="+0d">
-                        <input id="duedatetime" name="duedatetime" class="form-control form-control-inline input-medium date-picker" size="16" type="text" value="">
+                        <input name="DueDateTime" class="form-control form-control-inline input-medium date-picker" size="16" type="text">
                       </div>
                       <div class="form-group">
                         <label>Ticket Estimated Hours</label>
-                            <input type="text" class="form-control" placeholder="Estimated Hours" name="estimatedhours" id="estimatedhours" {% if estimatedhours %} value="{{ estimatedhours }}" {% endif %}></input>
+                            <input type="text" class="form-control" placeholder="Estimated Hours" name="EstimatedHours"></input>
                     </div>
                   </div>
                     <div class="col-md-6">
@@ -175,7 +175,7 @@ $(document).ready(function () {
 
                   <h6 class="card-header primary-color white-text">ASSIGNMENT</strong></h6>
                   <label>Assign to Queue</label>
-                  <select class="form-control" name="queueid" id="queueid">
+                  <select class="form-control" name="QueueID">
                     <option value="">Please select...</option>
                     <option value="">None</option>
                     {% for queue_id in queue_ids %}
@@ -193,7 +193,7 @@ $(document).ready(function () {
                   </select>
                   <br>
                   <label>Role</label>
-                  <select class="form-control" name="queueid" id="queueid">
+                  <select class="form-control" name="AssignedResourceRoleID">
                     <option value="">Please select...</option>
                     <option value="">None</option>
                     {% for role in roles %}
@@ -206,12 +206,14 @@ $(document).ready(function () {
                   <div class="row">
                     <div class="col-md-6">
                       <label>Contract</label>
-                      <select class="form-control" name="contractid" id="contractid">
+                      <select class="form-control" name="ContractID">
                         {% if not contracts %}
                           <option value="">No contracts for this account</option>
                         {% else %}
+                          <option value="">Please select...</option>
+                          <option value="">None</option>
                           {% for contract in contracts %}
-                              <option value="{{ contract.id }}">{{ contract.ContractName }}</option>
+                              <option value="{{ contract.ContractName }}">{{ contract.ContractName }}</option>
                           {% endfor %}
                         {% endif %}
                       </select>

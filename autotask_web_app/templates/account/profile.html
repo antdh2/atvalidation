@@ -67,16 +67,6 @@
                               <li class="active">
                                   <a href="#tab_1_1" data-toggle="tab">Personal Info</a>
                               </li>
-                              {% if customer.has_active_subscription and customer.current_subscription.plan == "extended" %}
-                              <li class="disabled">
-                                  <!-- <a href="#tab_1_2" data-toggle="tab">Change Avatar</a> -->
-                                  <a href="#" data-toggle="tab">Change Avatar</a>
-                              </li>
-                              <li class="disabled">
-                                  <!-- <a href="#tab_1_3" data-toggle="tab">Change Password</a> -->
-                                  <a href="#" data-toggle="tab">Change Password</a>
-                              </li>
-                              {% endif %}
                           </ul>
                       </div>
                       <div class="portlet-body">

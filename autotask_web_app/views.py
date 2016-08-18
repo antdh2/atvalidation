@@ -99,6 +99,38 @@ def input_validation(request, id):
             return render(request, 'input_validation.html', {"page": page, "entitytypes": entitytypes, "OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "existing_validations": existing_validations, "input_validation_dict": input_validation_dict, "existing_validation_groups": existing_validation_groups})
     return render(request, 'input_validation.html', {"page": page, "entitytypes": entitytypes, "OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "existing_validations": existing_validations, "input_validation_dict": input_validation_dict, "existing_validation_groups": existing_validation_groups})
 
+def edit_validation_group(request, id, validation_group_id):
+    if request.user:
+        at = autotask_login_function(request, request.user.profile.autotask_username, request.user.profile.autotask_password)
+    step = 1
+    validation_group = ValidationGroup.objects.get(id=validation_group_id)
+    existing_validations = Validation.objects.filter(validation_group=validation_group_id)
+    entity_attributes = at.new(validation_group.entity.name)
+    values = None
+    selected_key = None
+    key = None
+    if request.method == "POST":
+        if request.POST.get('step1-keyselect', False):
+            step = 2
+            key = request.POST['key']
+            selected_key = key
+            values = Picklist.objects.filter(profile=request.user.profile, key__icontains=validation_group.entity.name + "_" + key)
+            return render(request, 'edit_validation_group.html', {"OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "values": values, "selected_key": selected_key, "existing_validations": existing_validations, "validation_group": validation_group})
+        if request.POST.get('step2', False):
+            key = request.POST['selected_key']
+            value = request.POST['value']
+            operator = request.POST['operator']
+            # We have to find the picklist from atvar to associate the right number to the validation
+            # Validation object "value" should match the result of Picklist "key". ie. (atvar.)Ticket_Status_New on Validation should equal 1 on Picklist
+            try:
+                picklist_object = Picklist.objects.get(key=value)
+                picklist = picklist_object.value
+            except:
+                picklist = -100
+            validation = Validation.objects.create(profile=request.user.profile, key=key, value=value, operator=operator, entity=validation_group.entity, picklist_number=picklist, validation_group=validation_group)
+            return render(request, 'edit_validation_group.html', {"OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "values": values, "selected_key": selected_key, "existing_validations": existing_validations, "validation_group": validation_group})
+
+    return render(request, 'edit_validation_group.html', {"OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "values": values, "selected_key": selected_key, "existing_validations": existing_validations, "validation_group": validation_group})
 
 def delete_validation_group(request, id):
     userid = request.user.id
@@ -111,26 +143,43 @@ def delete_validation_group(request, id):
         messages.add_message(request, messages.ERROR, '{} is not your validation group.'.format(validation_group.name))
     return redirect('input_validation', userid)
 
+def delete_validation(request, id):
+    userid = request.user.id
+    validation = Validation.objects.get(id=id)
+    validation_group = ValidationGroup.objects.get(id=validation.validation_group.id)
+    # We must validate that the validation belongs to this user
+    if validation.profile == request.user.profile:
+        validation.delete()
+        messages.add_message(request, messages.SUCCESS, '{} validation deleted.'.format(validation.key + " " + validation.operator + " " + validation.value))
+    else:
+        messages.add_message(request, messages.ERROR, '{} is not your validation.'.format(validation.key + " " + validation.operator + " " + validation.value))
+    return redirect('edit_validation_group', userid, validation_group.id)
+
 
 def profile(request, id):
     page = 'profile'
     # First we must connect to autotask using valid credentials
     if request.method == "POST":
         if request.POST.get('editprofile', False):
-            profile = Profile.objects.filter(user_id=id)
+            profile = Profile.objects.get(user_id=id)
             profile.first_name = request.POST['profile-firstname']
             profile.last_name = request.POST['profile-lastname']
             profile.about = request.POST['profile-about']
-            profile.update()
+            profile.save()
             return render(request, 'account/profile.html', {"page": page, "profile": profile})
         if request.POST.get('autotasklogin', False):
             at = None
             username = request.POST['username']
             password = request.POST['password']
             at = autotask_login_function(request, username, password)
+            user = request.POST['username'].split('@')
+            resource = get_resource_from_username(user[0])
+            profile = Profile.objects.get(user=request.user)
+            profile.atresource_id = resource.id
+            profile.save()
             if at:
-                messages.add_message(request, messages.SUCCESS, 'Successfully logged in. You may now search for an Autotask account.')
-                return render(request, 'index.html', {"page": page, "at": at})
+                messages.add_message(request, messages.SUCCESS, 'Successfully logged in. You may now proceed to create a picklist module.')
+                return render(request, 'index.html', {"profile": profile, "page": page, "at": at})
             else:
                 return render(request, 'account/profile.html', {"page": page, "at": at, "profile": profile})
     return render(request, 'account/profile.html', {"page": page})
@@ -155,6 +204,7 @@ def create_ticket(request, id):
     # First we must check we have a logged in user then ensure we're connected to AT
     if request.user:
         at = autotask_login_function(request, request.user.profile.autotask_username, request.user.profile.autotask_password)
+    profile = Profile.objects.get(user=request.user)
     account_id = id
     ataccount = get_account(account_id)
     # Get all picklist objects
@@ -175,7 +225,6 @@ def create_ticket(request, id):
     contracts = get_contracts(account_id)
     # Grab all validation groups for this user
     validation_groups = ValidationGroup.objects.filter(profile=request.user.profile)
-
     validated = True
     if request.method == "POST":
         # First we must check to see if user has selected to apply validation groups
@@ -190,62 +239,75 @@ def create_ticket(request, id):
             return render(request, 'create_ticket.html', {"create_ticket_dict": create_ticket_dict, "contacts": contacts, "services": services, "allocation_codes": allocation_codes, "contracts": contracts, "roles": roles, "resources": resources, "account_types": account_types, "statuses": statuses, "priorities": priorities, "queue_ids": queue_ids, "ticket_sources": ticket_sources, "issue_types": issue_types, "sub_issue_types": sub_issue_types, "slas": slas, "ticket_types": ticket_types, "ataccount": ataccount,    "validation_groups": validation_groups})
 
         # If we have a selected validation group, then lets go ahead and check for validations using that group
-        if create_ticket_dict['SelectedValidationGroup']:
-            validated = validate_input(request, create_ticket_dict['SelectedValidationGroup'])
+        try:
+            if create_ticket_dict['SelectedValidationGroup']:
+                validated = validate_input(request, create_ticket_dict['SelectedValidationGroup'])
+        except KeyError:
+            pass
         # if validation fails then return to webpage with an error message (this is handled by function call)
         if not validated:
             return render(request, 'create_ticket.html', {"create_ticket_dict": create_ticket_dict, "contacts": contacts, "services": services, "allocation_codes": allocation_codes, "contracts": contracts, "roles": roles, "resources": resources, "account_types": account_types, "statuses": statuses, "priorities": priorities, "queue_ids": queue_ids, "ticket_sources": ticket_sources, "issue_types": issue_types, "sub_issue_types": sub_issue_types, "slas": slas, "ticket_types": ticket_types, "ataccount": ataccount,    "validation_groups": validation_groups})
         # if we pass validation, previous line of code is not run and a ticket is created
+        # but first lets do some custom work
+        # 1) logic for determining which contract to validate
+        contract_name = request.POST['ContractID'].lower()
+        print(contract_name)
+        contract = get_contract_for_ticket(account_id, contract_name)
+        print(contract)
+        if contract:
+            contract = contract
+        else:
+            contract = None
         new_ticket = ticket_create_new(True,
             AccountID = account_id,
-            AEMAlertID = request.POST.get('AEMAlertID', False),
+            # AEMAlertID = request.POST['AEMAlertID'],
             AllocationCodeID = request.POST['AllocationCodeID'],
             AssignedResourceID = request.POST['AssignedResourceID'],
             AssignedResourceRoleID = request.POST['AssignedResourceRoleID'],
-            ChangeApprovalBoard = request.POST['ChangeApprovalBoard'],
-            ChangeApprovalStatus = request.POST['ChangeApprovalStatus'],
-            ChangeApprovalType = request.POST['ChangeApprovalType'],
-            ChangeInfoField1 = request.POST['ChangeInfoField1'],
-            ChangeInfoField2 = request.POST['ChangeInfoField2'],
-            ChangeInfoField3 = request.POST['ChangeInfoField3'],
-            ChangeInfoField4 = request.POST['ChangeInfoField4'],
-            ChangeInfoField5 = request.POST['ChangeInfoField5'],
-            CompletedDate = request.POST['CompletedDate'],
+            # ChangeApprovalBoard = request.POST['ChangeApprovalBoard'],
+            # ChangeApprovalStatus = request.POST['ChangeApprovalStatus'],
+            # ChangeApprovalType = request.POST['ChangeApprovalType'],
+            # ChangeInfoField1 = request.POST['ChangeInfoField1'],
+            # ChangeInfoField2 = request.POST['ChangeInfoField2'],
+            # ChangeInfoField3 = request.POST['ChangeInfoField3'],
+            # ChangeInfoField4 = request.POST['ChangeInfoField4'],
+            # ChangeInfoField5 = request.POST['ChangeInfoField5'],
+            # CompletedDate = request.POST['CompletedDate'],
             ContactID = request.POST['ContactID'],
-            ContractID = request.POST['ContractID'],
-            CreatorResourceID = request.POST['CreatorResourceID'],
-            Description = request.POST['description'],
-            DueDateTime = request.POST['duedatetime'],
-            EstimatedHours = request.POST['estimatedhours'],
-            FirstResponseDateTime = request.POST['FirstResponseDateTime'],
-            FirstResponseDueDateTime = request.POST['FirstResponseDueDateTime'],
-            HoursToBeScheduled = request.POST['HoursToBeScheduled'],
-            InstalledProductID = request.POST['InstalledProductID'],
+            # ContractID = contract.id,
+            CreatorResourceID = profile.atresource_id,
+            Description = request.POST['Description'],
+            DueDateTime = request.POST['DueDateTime'],
+            EstimatedHours = request.POST['EstimatedHours'],
+            # FirstResponseDateTime = request.POST['FirstResponseDateTime'],
+            # FirstResponseDueDateTime = request.POST['FirstResponseDueDateTime'],
+            # HoursToBeScheduled = request.POST['HoursToBeScheduled'],
+            # InstalledProductID = request.POST['InstalledProductID'],
             IssueType = request.POST['IssueType'],
-            LastActivityDate = request.POST['LastActivityDate'],
-            LastCustomerNotificationDateTime = request.POST['LastCustomerNotificationDateTime'],
-            LastCustomerVisibleActivityDateTime = request.POST['LastCustomerVisibleActivityDateTime'],
-            MonitorID = request.POST['MonitorID'],
-            MonitorTypeID = request.POST['MonitorTypeID'],
-            OpportunityId = request.POST['OpportunityId'],
-            Priority = request.POST['priority'],
-            ProblemTicketId = request.POST['ProblemTicketId'],
-            PurchaseOrderNumber = request.POST['PurchaseOrderNumber'],
-            QueueID = request.POST['queueid'],
-            Resolution = request.POST['Resolution'],
-            ResolutionPlanDateTime = request.POST['ResolutionPlanDateTime'],
-            ResolutionPlanDueDateTime = request.POST['ResolutionPlanDueDateTime'],
-            ResolvedDateTime = request.POST['ResolvedDateTime'],
-            ResolvedDueDateTime = request.POST['ResolvedDueDateTime'],
-            ServiceLevelAgreementHasBeenMet = request.POST['ServiceLevelAgreementHasBeenMet'],
+            # LastActivityDate = request.POST['LastActivityDate'],
+            # LastCustomerNotificationDateTime = request.POST['LastCustomerNotificationDateTime'],
+            # LastCustomerVisibleActivityDateTime = request.POST['LastCustomerVisibleActivityDateTime'],
+            # MonitorID = request.POST['MonitorID'],
+            # MonitorTypeID = request.POST['MonitorTypeID'],
+            # OpportunityId = request.POST['OpportunityId'],
+            Priority = request.POST['Priority'],
+            # ProblemTicketId = request.POST['ProblemTicketId'],
+            # PurchaseOrderNumber = request.POST['PurchaseOrderNumber'],
+            QueueID = request.POST['QueueID'],
+            # Resolution = request.POST['Resolution'],
+            # ResolutionPlanDateTime = request.POST['ResolutionPlanDateTime'],
+            # ResolutionPlanDueDateTime = request.POST['ResolutionPlanDueDateTime'],
+            # ResolvedDateTime = request.POST['ResolvedDateTime'],
+            # ResolvedDueDateTime = request.POST['ResolvedDueDateTime'],
+            # ServiceLevelAgreementHasBeenMet = request.POST['ServiceLevelAgreementHasBeenMet'],
             ServiceLevelAgreementID = request.POST['ServiceLevelAgreementID'],
-            Source = request.POST['Source'],
-            Status = request.POST['status'],
+            # Source = request.POST['Source'],
+            Status = request.POST['Status'],
             SubIssueType = request.POST['SubIssueType'],
-            TicketNumber = request.POST['TicketNumber'],
+            # TicketNumber = request.POST['TicketNumber'],
             TicketType = request.POST['TicketType'],
-            Title = request.POST['title'],
-        )
+            Title = request.POST['Title'],
+            )
         messages.add_message(request, messages.SUCCESS, ('Ticket - ' + new_ticket.TicketNumber + ' - ' + new_ticket.Title + ' created.'))
     return render(request, 'create_ticket.html', {"create_ticket_dict": create_ticket_dict, "contacts": contacts, "services": services, "allocation_codes": allocation_codes, "contracts": contracts, "roles": roles, "resources": resources, "account_types": account_types, "statuses": statuses, "priorities": priorities, "queue_ids": queue_ids, "ticket_sources": ticket_sources, "issue_types": issue_types, "sub_issue_types": sub_issue_types, "slas": slas, "ticket_types": ticket_types, "ataccount": ataccount,    "validation_groups": validation_groups})
 
@@ -291,12 +353,20 @@ def validate_input(request, validation_group_id):
     # custom validation groups
     validated = True
     for validation in ticket_validations:
+        if type(request.POST[validation.key]) == str:
+            print("hi")
+            if request.POST[validation.key] == validation.value:
+                print("false")
+                validated = True
+                messages.add_message(request, messages.SUCCESS, mark_safe(validation.key + " valid."))
+                continue
         if validation.picklist_number == -100:
-            if not OPERATORS[validation.operator](request.POST[validation.key.lower()], validation.value):
+            print(request.POST[validation.key])
+            if not OPERATORS[validation.operator](request.POST[validation.key].lower(), validation.value):
                 validated = False
                 messages.add_message(request, messages.ERROR, mark_safe(validation.key + " not valid.<br><small>" + validation.key + " must be " + validation.operator + " " + validation.value + "</small>"))
         elif validation.picklist_number != -100:
-            if not OPERATORS[validation.operator](int(request.POST[validation.key.lower()]), validation.picklist_number):
+            if not OPERATORS[validation.operator](int(request.POST[validation.key].lower()), validation.picklist_number):
                 validated = False
                 messages.add_message(request, messages.ERROR, mark_safe(validation.key + " not valid.<br><small>" + validation.key + " must be " + validation.operator + " " + validation.value + "</small>"))
     return validated
@@ -411,6 +481,12 @@ def get_resource_from_id(resource_id):
     resource = at.query(aquery).fetch_one()
     return resource
 
+def get_resource_from_username(username):
+    aquery = atws.Query('Resource')
+    aquery.WHERE('UserName',aquery.Equals,username)
+    resource = at.query(aquery).fetch_one()
+    return resource
+
 def get_contact_for_ticket(contact_id):
     aquery = atws.Query('Contact')
     aquery.WHERE('id',aquery.Equals,contact_id)
@@ -509,7 +585,12 @@ def contact_create_new(validated, **kwargs):
 
 
 
-
+def get_contract_for_ticket(account_id, contract_name):
+    aquery = atws.Query('Contract')
+    aquery.WHERE('AccountID',aquery.Equals,account_id)
+    aquery.WHERE('ContractName',aquery.Equals,contract_name)
+    contract = at.query(aquery).fetch_one()
+    return contract
 
 
 def get_resources():
@@ -527,6 +608,13 @@ def get_roles():
 def get_contracts(account_id):
     aquery = atws.Query('Contract')
     aquery.WHERE('AccountID',aquery.Equals,account_id)
+    contracts = at.query(aquery).fetch_all()
+    return contracts
+
+def get_all_contracts():
+    aquery = atws.Query('Contract')
+    aquery.WHERE('AccountID',aquery.GreaterThan,-1)
+    aquery.WHERE('Status',aquery.Equals,1)
     contracts = at.query(aquery).fetch_all()
     return contracts
 
