@@ -425,9 +425,14 @@ def validate_input(request, validation_group_id):
                 validated = False
                 messages.add_message(request, messages.ERROR, mark_safe(validation.key + " not valid.<br><small>" + validation.key + " must be " + validation.operator + " " + validation.value + "</small>"))
         elif validation.picklist_number != -100:
-            if not OPERATORS[validation.operator](int(request.POST[validation.key].lower()), validation.picklist_number):
-                validated = False
-                messages.add_message(request, messages.ERROR, mark_safe(validation.key + " not valid.<br><small>" + validation.key + " must be " + validation.operator + " " + validation.value + "</small>"))
+            try:
+                if not OPERATORS[validation.operator](int(request.POST[validation.key].lower()), validation.picklist_number):
+                    validated = False
+                    messages.add_message(request, messages.ERROR, mark_safe(validation.key + " not valid.<br><small>" + validation.key + " must be " + validation.operator + " " + validation.value + "</small>"))
+            except:
+                messages.add_message(request, messages.ERROR, mark_safe(validation.key + " is empty or not selected.<br><small>" + validation.key + " must be " + validation.operator + " " + validation.value + "</small>"))
+                print("invalid literal for int() with base 10:")
+                pass
     return validated
 
 

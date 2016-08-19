@@ -67,7 +67,7 @@ $(document).ready(function () {
                   <option value="{{ create_ticket_dict.SelectedValidationGroup.id }}">{{ create_ticket_dict.SelectedValidationGroupName }} - Selected</option>
                   <option data-divider="true"></option>
                 {% else %}
-                  <option value="-2">No Validation Group Selected</option>
+                  <option value="">No Validation Group Selected</option>
                 {% endif %}
                 {% for validation_group in validation_groups %}
                     <option value="{{ validation_group.id }}">{{ validation_group.name }}</option>
@@ -90,8 +90,8 @@ $(document).ready(function () {
                     <br>
                     <label>Ticket Contact</label>
                     <select class="form-control priority" name="ContactID">
-                      <option value="-2">Please select...</option>
-                      <option value="-2">None</option>
+                      <option value="">Please select...</option>
+                      <option value="">None</option>
                       {% for contact in contacts %}
                           <option value="{{ contact.id }}">{{ contact.FirstName }} {{ contact.LastName }}</option>
                       {% endfor %}
@@ -106,8 +106,8 @@ $(document).ready(function () {
                     <div class="col-md-6">
                       <label>Ticket Status</label>
                       <select class="form-control" name="Status">
-                        <option value="-2">Please select...</option>
-                        <option value="-2">None</option>
+                        <option value="">Please select...</option>
+                        <option value="">None</option>
                         {% for status in statuses %}
                             <option value="{{ status.value }}">{{ status.key }}</option>
                         {% endfor %}
@@ -115,8 +115,8 @@ $(document).ready(function () {
                       <br>
                       <label>Ticket Priority</label>
                       <select class="form-control priority" name="Priority">
-                        <option value="-2">Please select...</option>
-                        <option value="-2">None</option>
+                        <option value="">Please select...</option>
+                        <option value="">None</option>
                         {% for priority in priorities %}
                             <option value="{{ priority.value }}">{{ priority.key }}</option>
                         {% endfor %}
@@ -134,8 +134,8 @@ $(document).ready(function () {
                     <div class="col-md-6">
                       <label>Ticket Type</label>
                       <select class="form-control" name="TicketType" id="TicketType">
-                        <option value="-2">Please select...</option>
-                        <option value="-2">None</option>
+                        <option value="">Please select...</option>
+                        <option value="">None</option>
                         {% for ticket_type in ticket_types %}
                             <option value="{{ ticket_type.value }}">{{ ticket_type.key }}</option>
                         {% endfor %}
@@ -143,8 +143,8 @@ $(document).ready(function () {
                       <br>
                       <label>Issue Type</label>
                       <select class="form-control" name="IssueType" id="IssueType">
-                        <option value="-2">Please select...</option>
-                        <option value="-2">None</option>
+                        <option value="">Please select...</option>
+                        <option value="">None</option>
                         {% for issue_type in issue_types %}
                             <option value="{{ issue_type.value }}">{{ issue_type.key }}</option>
                         {% endfor %}
@@ -152,8 +152,8 @@ $(document).ready(function () {
                       <br>
                       <label>Sub Issue Type</label>
                       <select class="form-control" name="SubIssueType" id="SubIssueType">
-                        <option value="-2">Please select...</option>
-                        <option value="-2">None</option>
+                        <option value="">Please select...</option>
+                        <option value="">None</option>
                         {% for sub_issue_type in sub_issue_types %}
                             <option value="{{ sub_issue_type.value }}">{{ sub_issue_type.key }}</option>
                         {% endfor %}
@@ -161,8 +161,8 @@ $(document).ready(function () {
                       <br>
                       <label>SLA</label>
                       <select class="form-control" name="ServiceLevelAgreementID" id="ServiceLevelAgreementID">
-                        <option value="-2">Please select...</option>
-                        <option value="-2">None</option>
+                        <option value="">Please select...</option>
+                        <option value="">None</option>
                         {% for sla in slas %}
                             <option value="{{ sla.value }}">{{ sla.key }}</option>
                         {% endfor %}
@@ -176,8 +176,8 @@ $(document).ready(function () {
                   <h6 class="card-header primary-color white-text">ASSIGNMENT</strong></h6>
                   <label>Assign to Queue</label>
                   <select class="form-control" name="QueueID">
-                    <option value="-2">Please select...</option>
-                    <option value="-2">None</option>
+                    <option value="">Please select...</option>
+                    <option value="">None</option>
                     {% for queue_id in queue_ids %}
                         <option value="{{ queue_id.value }}">{{ queue_id.key }}</option>
                     {% endfor %}
@@ -185,8 +185,8 @@ $(document).ready(function () {
                   <br>
                   <label>Primary Resource</label>
                   <select class="form-control" name="AssignedResourceID" id="AssignedResourceID">
-                    <option value="-2">Please select...</option>
-                    <option value="-2">None</option>
+                    <option value="">Please select...</option>
+                    <option value="">None</option>
                     {% for resource in resources %}
                         <option value="{{ resource.id }}">{{ resource.FirstName }} {{ resource.LastName }}</option>
                     {% endfor %}
@@ -194,8 +194,8 @@ $(document).ready(function () {
                   <br>
                   <label>Role</label>
                   <select class="form-control" name="AssignedResourceRoleID">
-                    <option value="-2">Please select...</option>
-                    <option value="-2">None</option>
+                    <option value="">Please select...</option>
+                    <option value="">None</option>
                     {% for role in roles %}
                         <option value="{{ role.id }}">{{ role.Name }}</option>
                     {% endfor %}
@@ -208,10 +208,10 @@ $(document).ready(function () {
                       <label>Contract</label>
                       <select class="form-control" name="ContractID">
                         {% if not contracts %}
-                          <option value="-2">No contracts for this account</option>
+                          <option value="">No contracts for this account</option>
                         {% else %}
-                          <option value="-2">Please select...</option>
-                          <option value="-2">None</option>
+                          <option value="">Please select...</option>
+                          <option value="">None</option>
                           {% for contract in contracts %}
                               <option value="{{ contract.ContractName }}">{{ contract.ContractName }}</option>
                           {% endfor %}
@@ -221,7 +221,7 @@ $(document).ready(function () {
                       <label>Service/Bundle</label>
                       <select class="form-control" name="test" id="test">
                         {% if not services %}
-                          <option value="-2">No services for this account</option>
+                          <option value="">No services for this account</option>
                           {% for service in services %}
                               <option value="{{ service.id }}">{{ service.InvoiceDescription }}</option>
                           {% endfor %}
@@ -232,10 +232,10 @@ $(document).ready(function () {
                       <label>Work Type</label>
                       <select class="form-control" name="AllocationCodeID" id="AllocationCodeID">
                         {% if not allocation_codes %}
-                          <option value="-2">No services for this account</option>
+                          <option value="">No services for this account</option>
                         {% else %}
-                          <option value="-2">Please select...</option>
-                          <option value="-2">None</option>
+                          <option value="">Please select...</option>
+                          <option value="">None</option>
                           {% for allocation_code in allocation_codes %}
                               <option value="{{ allocation_code.id }}">{{ allocation_code.Name }}</option>
                           {% endfor %}
