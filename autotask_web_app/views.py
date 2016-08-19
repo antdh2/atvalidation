@@ -416,15 +416,11 @@ def validate_input(request, validation_group_id):
     # custom validation groups
     validated = True
     for validation in ticket_validations:
-        if type(request.POST[validation.key]) == str:
-            print("hi")
-            if request.POST[validation.key] == validation.value:
-                print("false")
-                validated = True
-                messages.add_message(request, messages.SUCCESS, mark_safe(validation.key + " valid."))
-                continue
         if validation.picklist_number == -100:
             print(request.POST[validation.key])
+            if request.POST[validation.key] == validation.value:
+                messages.add_message(request, messages.SUCCESS, mark_safe(validation.key + " valid."))
+                continue
             if not OPERATORS[validation.operator](request.POST[validation.key].lower(), validation.value):
                 validated = False
                 messages.add_message(request, messages.ERROR, mark_safe(validation.key + " not valid.<br><small>" + validation.key + " must be " + validation.operator + " " + validation.value + "</small>"))
