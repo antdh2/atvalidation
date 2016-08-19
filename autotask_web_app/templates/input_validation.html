@@ -118,7 +118,7 @@
                                 </div>
                               </div>
                               <br>
-                              <input type="submit" style="margin-top: 10px;" />
+                              <input type="submit" class="btn green" style="margin-top: 10px;" />
                             </form>
                         </div>
                       {% endif %}
@@ -163,7 +163,7 @@
                         <label for="value">Value</label>
                         <select name="value" class="form-control">
                           {% for value in values %}
-                            <option value="{{ value.key }} {{ value.id }}">{{ value.key }} {{ value.ContractName }}</option>
+                            <option value="{{ value.key }}">{{ value.key }}</option>
                           {% endfor %}
                         </select>
                         {% else %}
@@ -174,7 +174,7 @@
                     </div>
                   </div>
                   <br>
-                  <input type="submit" style="margin-top: 10px;" />
+                  <input type="submit" class="btn green" style="margin-top: 10px;" />
                 </form>
             </div>
             {% endif %}

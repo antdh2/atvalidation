@@ -24,7 +24,7 @@ import operator
 # import the wonderful decorator for stripe
 from djstripe.decorators import subscription_payment_required
 from . import atvar
-from .models import Profile, BookingInDetails, Upsell, Picklist, Validation, ValidationGroup, Entity
+from .models import Profile, Picklist, Validation, ValidationGroup, Entity, Company
 from account.signals import user_logged_in
 
 
@@ -115,8 +115,11 @@ def input_validation(request, id):
     if request.user:
         at = autotask_login_function(request, request.user.profile.autotask_username, request.user.profile.autotask_password)
     try:
-        existing_validations = Validation.objects.filter(profile=request.user.profile)
-        existing_validation_groups = ValidationGroup.objects.filter(profile=request.user.profile)
+        existing_validation_groups = ValidationGroup.objects.filter(company=request.user.profile.company)
+        existing_validations = []
+        validations = Validation.objects.all()
+        for v in validations:
+            existing_validations.append(v)
     except:
         existing_validations = None
         existing_validation_groups = None
@@ -134,16 +137,17 @@ def input_validation(request, id):
             entity = Entity.objects.get(name=request.POST['entitytype'])
             input_validation_dict['Entity'] = entity
             input_validation_dict['EntityName'] = request.POST['entitytype']
-            validation_group = ValidationGroup.objects.create(profile=request.user.profile, name=request.POST['validation-group-name'], entity=entity)
+            validation_group = ValidationGroup.objects.create(company=request.user.profile.company, name=request.POST['validation-group-name'], entity=entity)
             input_validation_dict['ValidationGroupId'] = validation_group.id
             input_validation_dict['ValidationGroup'] = validation_group
             entity_attributes = at.new(input_validation_dict['EntityName'])
-            return render(request, 'input_validation.html', {"page": page, "entitytypes": entitytypes, "OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "values": values, "selected_key": selected_key, "existing_validations": existing_validations, "input_validation_dict": input_validation_dict, "existing_validation_groups": existing_validation_groups})
+            return redirect('edit_validation_group', id, input_validation_dict['ValidationGroupId'])
+            # return render(request, 'input_validation.html', {"page": page, "entitytypes": entitytypes, "OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "values": values, "selected_key": selected_key, "existing_validations": existing_validations, "input_validation_dict": input_validation_dict, "existing_validation_groups": existing_validation_groups})
         if request.POST.get('step2-keyselect', False):
             step = 3
             key = request.POST['key']
             selected_key = key
-            values = Picklist.objects.filter(profile=request.user.profile, key__icontains=input_validation_dict['EntityName'] + "_" + key)
+            values = Picklist.objects.filter(company=request.user.profile.company, key__icontains=input_validation_dict['EntityName'] + "_" + key)
             return render(request, 'input_validation.html', {"page": page, "entitytypes": entitytypes, "OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "values": values, "selected_key": selected_key, "existing_validations": existing_validations, "input_validation_dict": input_validation_dict, "existing_validation_groups": existing_validation_groups})
         if request.POST.get('step2', False):
             step = 3
@@ -158,7 +162,7 @@ def input_validation(request, id):
             except:
                 picklist = -100
             entity = Entity.objects.get(name="Ticket")
-            validation = Validation.objects.create(profile=request.user.profile, key=key, value=value, operator=operator, entity=entity, picklist_number=picklist, validation_group=input_validation_dict['ValidationGroup'])
+            validation = Validation.objects.create(key=key, value=value, operator=operator, entity=entity, picklist_number=picklist, validation_group=input_validation_dict['ValidationGroup'])
             return render(request, 'input_validation.html', {"page": page, "entitytypes": entitytypes, "OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "existing_validations": existing_validations, "input_validation_dict": input_validation_dict, "existing_validation_groups": existing_validation_groups})
     return render(request, 'input_validation.html', {"page": page, "entitytypes": entitytypes, "OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "existing_validations": existing_validations, "input_validation_dict": input_validation_dict, "existing_validation_groups": existing_validation_groups})
 
@@ -177,7 +181,7 @@ def edit_validation_group(request, id, validation_group_id):
             step = 2
             key = request.POST['key']
             selected_key = key
-            values = Picklist.objects.filter(profile=request.user.profile, key__icontains=validation_group.entity.name + "_" + key)
+            values = Picklist.objects.filter(company=request.user.profile.company, key__icontains=validation_group.entity.name + "_" + key)
             return render(request, 'edit_validation_group.html', {"OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "values": values, "selected_key": selected_key, "existing_validations": existing_validations, "validation_group": validation_group})
         if request.POST.get('step2', False):
             key = request.POST['selected_key']
@@ -190,7 +194,7 @@ def edit_validation_group(request, id, validation_group_id):
                 picklist = picklist_object.value
             except:
                 picklist = -100
-            validation = Validation.objects.create(profile=request.user.profile, key=key, value=value, operator=operator, entity=validation_group.entity, picklist_number=picklist, validation_group=validation_group)
+            validation = Validation.objects.create(key=key, value=value, operator=operator, entity=validation_group.entity, picklist_number=picklist, validation_group=validation_group)
             return render(request, 'edit_validation_group.html', {"OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "values": values, "selected_key": selected_key, "existing_validations": existing_validations, "validation_group": validation_group})
 
     return render(request, 'edit_validation_group.html', {"OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "values": values, "selected_key": selected_key, "existing_validations": existing_validations, "validation_group": validation_group})
@@ -199,7 +203,7 @@ def delete_validation_group(request, id):
     userid = request.user.id
     validation_group = ValidationGroup.objects.get(id=id)
     # We must validate that the validation group belongs to this user
-    if validation_group.profile == request.user.profile:
+    if validation_group.company == request.user.profile.company:
         validation_group.delete()
         messages.add_message(request, messages.SUCCESS, '{} validation group deleted.'.format(validation_group.name))
     else:
@@ -211,7 +215,7 @@ def delete_validation(request, id):
     validation = Validation.objects.get(id=id)
     validation_group = ValidationGroup.objects.get(id=validation.validation_group.id)
     # We must validate that the validation belongs to this user
-    if validation.profile == request.user.profile:
+    if validation.validation_group == validation_group:
         validation.delete()
         messages.add_message(request, messages.SUCCESS, '{} validation deleted.'.format(validation.key + " " + validation.operator + " " + validation.value))
     else:
@@ -223,6 +227,23 @@ def profile(request, id):
     page = 'profile'
     # First we must connect to autotask using valid credentials
     if request.method == "POST":
+        if request.POST.get('joincompany', False):
+            profile = Profile.objects.get(user_id=id)
+            company = Company.objects.get(id=request.POST['join-company-id'], name=request.POST['join-company-name'], password=request.POST['join-company-password'])
+            profile.company = company
+            profile.save()
+        if request.POST.get('leavecompany', False):
+            profile = Profile.objects.get(user_id=id)
+            # Set company to default "No Company"
+            company = Company.objects.get(id=1)
+            profile.company = company
+            profile.save()
+        if request.POST.get('createcompany', False):
+            company = Company.objects.create(name=request.POST['create-company-name'], password=request.POST['create-company-password'])
+            company.save()
+            profile = Profile.objects.get(user_id=id)
+            profile.company = company
+            profile.save()
         if request.POST.get('editprofile', False):
             profile = Profile.objects.get(user_id=id)
             profile.first_name = request.POST['profile-firstname']
@@ -287,7 +308,7 @@ def create_ticket(request, id):
     allocation_codes = get_allocation_codes()
     contracts = get_contracts(account_id)
     # Grab all validation groups for this user
-    validation_groups = ValidationGroup.objects.filter(profile=request.user.profile)
+    validation_groups = ValidationGroup.objects.filter(company=request.user.profile.company)
     validated = True
     if request.method == "POST":
         # First we must check to see if user has selected to apply validation groups
@@ -752,8 +773,8 @@ def create_picklist(request):
 
 
 def create_picklist_database(request):
-    # First we wamt to delete any existing picklist items
-    picklists = Picklist.objects.filter(profile=request.user.profile)
+    # First we want to delete any existing picklist items
+    picklists = Picklist.objects.filter(company=request.user.profile.company)
     for picklist in picklists:
         picklist.delete()
     file = open('atvar.py', 'r')
@@ -764,9 +785,9 @@ def create_picklist_database(request):
         db_key = line_array[0]
         # Now select third element in index 2, ie. 29682778
         db_value = line_array[2]
-        Picklist.objects.create(profile=request.user.profile, key=db_key, value=db_value)
+        Picklist.objects.create(company=request.user.profile.company, key=db_key, value=db_value)
     messages.add_message(request, messages.SUCCESS, 'Added all picklist entities to database')
-    return render(request, 'account/profile.html', {})
+    return redirect('profile', request.user.id)
 
 def create_picklist_dict(dict_name, index, regex):
     file = open('atvar.py', 'r')
@@ -856,6 +877,8 @@ class SignupView(account.views.SignupView):
        profile.first_name = form.cleaned_data["first_name"]
        profile.last_name = form.cleaned_data["last_name"]
        profile.email = form.cleaned_data["email"]
+       # set default company
+       profile.company_id = 1
        profile.save()
 
    def generate_username(self, form):

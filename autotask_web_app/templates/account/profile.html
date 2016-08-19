@@ -21,6 +21,7 @@
                                     <!-- SIDEBAR USER TITLE -->
                                     <div class="profile-usertitle">
                                         <div class="profile-usertitle-name"> {{ user.profile.first_name }} {{ user.profile.last_name }}</div>
+                                        <div class="profile-usertitle-job"> {{ user.profile.company.name }} </div>
                                         <br>
                                     </div>
                                     <!-- END SIDEBAR USER TITLE -->
@@ -64,9 +65,12 @@
                               <span class="caption-subject font-blue-madison bold uppercase">Profile Account</span>
                           </div>
                           <ul class="nav nav-tabs">
-                              <li class="active">
-                                  <a href="#tab_1_1" data-toggle="tab">Personal Info</a>
-                              </li>
+                            <li class="active">
+                                <a href="#tab_1_1" data-toggle="tab">Personal</a>
+                            </li>
+                            <li class="">
+                                <a href="#tab_1_2" data-toggle="tab">Company</a>
+                            </li>
                           </ul>
                       </div>
                       <div class="portlet-body">
@@ -93,54 +97,93 @@
                               </div>
                               <!-- END PERSONAL INFO TAB -->
                               <!-- CHANGE AVATAR TAB -->
+                              <script type="text/javascript">
+                                function showJoin() {
+                                    div = document.getElementById('joincompany');
+                                    div2 = document.getElementById('createcompany');
+                                    div.style.display = "block";
+                                    div2.style.display = "none";
+                                }
+                                function showCreate() {
+                                  div = document.getElementById('createcompany');
+                                  div2 = document.getElementById('joincompany');
+                                  div.style.display = "block";
+                                  div2.style.display = "none";
+                                }
+                              </script>
                               <div class="tab-pane" id="tab_1_2">
-                                  <p> Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum
-                                      eiusmod. </p>
-                                  <form action="#" role="form">
+                                {% if user.profile.company.id == 1 %}
+                                <a onclick="javascript:showJoin();" class="btn green">JOIN COMPANY</a>  <a onclick="javascript:showCreate();" class="btn green">CREATE COMPANY</a>
+                                <div id="joincompany" style="display: none">
+                                  <hr>
+                                  <h4>You are not part of a company</h4>
+                                  <p>Join your company by entering the name, id and password below</p>
+                                  <hr>
+                                  <form role="form" method="POST" style="width: 35%">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="joincompany" value="joincompany">
                                       <div class="form-group">
-                                          <div class="fileinput fileinput-new" data-provides="fileinput">
-                                              <div class="fileinput-new thumbnail" style="width: 200px; height: 150px;">
-                                                  <img src="http://www.placehold.it/200x150/EFEFEF/AAAAAA&amp;text=no+image" alt="" /> </div>
-                                              <div class="fileinput-preview fileinput-exists thumbnail" style="max-width: 200px; max-height: 150px;"> </div>
-                                              <div>
-                                                  <span class="btn default btn-file">
-                                                      <span class="fileinput-new"> Select image </span>
-                                                      <span class="fileinput-exists"> Change </span>
-                                                      <input type="file" name="..."> </span>
-                                                  <a href="javascript:;" class="btn default fileinput-exists" data-dismiss="fileinput"> Remove </a>
-                                              </div>
-                                          </div>
-                                          <div class="clearfix margin-top-10">
-                                              <span class="label label-danger">NOTE! </span>
-                                              <span>Attached image thumbnail is supported in Latest Firefox, Chrome, Opera, Safari and Internet Explorer 10 only </span>
-                                          </div>
+                                        <label class="control-label">Company Name</label>
+                                        <input name="join-company-name" type="text" placeholder="Company Name" class="form-control"/>
                                       </div>
-                                      <div class="margin-top-10">
-                                          <a href="javascript:;" class="btn green"> Submit </a>
-                                          <a href="javascript:;" class="btn default"> Cancel </a>
+                                      <div class="form-group">
+                                        <label class="control-label">Company ID</label>
+                                        <input name="join-company-id" type="text" placeholder="Company ID" class="form-control"/>
+                                      </div>
+                                      <div class="form-group">
+                                        <label class="control-label">Company Password</label>
+                                        <input name="join-company-password" type="password" placeholder="Password" class="form-control" value=""/>
+                                      </div>
+                                      <div class="margiv-top-10">
+                                        <input type="submit" class="btn green" />
                                       </div>
                                   </form>
+                                </div>
+                                <div id="createcompany" style="display: none">
+                                  <hr>
+                                  <h4>Create New Company</h4>
+                                  <p>Create a new company and hand out the Name, ID and Password to other users</p>
+                                  <hr>
+                                  <form role="form" method="POST" style="width: 35%">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="createcompany" value="createcompany">
+                                      <div class="form-group">
+                                          <label class="control-label">Company Name</label>
+                                          <input name="create-company-name" type="text" placeholder="Enter a Company Name" class="form-control"/>
+                                      </div>
+                                      <div class="form-group">
+                                          <label class="control-label">Company Password</label>
+                                          <input name="create-company-password" type="password" placeholder="Enter a Company Password" class="form-control"/>
+                                      </div>
+                                      <div class="margiv-top-10">
+                                        <input type="submit" class="btn green" />
+                                      </div>
+                                  </form>
+                                </div>
+                                {% endif %}
+                                {% if user.profile.company.id > 1 %}
+                                  <h4>Your Company</h4>
+                                  <p>You must leave this company before you can join or create one</p>
+                                  <hr>
+                                  <form role="form" method="POST" style="width: 35%">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="leavecompany" value="leavecompany">
+                                      <div class="form-group">
+                                        <label class="control-label">Company Name</label>
+                                        <input name="company-name" type="text" class="form-control" value="{{ user.profile.company.name }}"/>
+                                      </div>
+                                      <div class="form-group">
+                                        <label class="control-label">Company ID</label>
+                                        <input name="company-id" type="text" class="form-control" value="{{ user.profile.company.id }}"/>
+                                      </div>
+                                      <div class="margiv-top-10">
+                                        <input type="submit" class="btn green" value="LEAVE COMPANY">
+                                      </div>
+                                  </form>
+                                {% endif %}
                               </div>
+
                               <!-- END CHANGE AVATAR TAB -->
-                              <!-- CHANGE PASSWORD TAB -->
-                              <div class="tab-pane" id="tab_1_3">
-                                  <form action="#">
-                                      <div class="form-group">
-                                          <label class="control-label">Current Password</label>
-                                          <input type="password" class="form-control" /> </div>
-                                      <div class="form-group">
-                                          <label class="control-label">New Password</label>
-                                          <input type="password" class="form-control" /> </div>
-                                      <div class="form-group">
-                                          <label class="control-label">Re-type New Password</label>
-                                          <input type="password" class="form-control" /> </div>
-                                      <div class="margin-top-10">
-                                          <a href="javascript:;" class="btn green"> Change Password </a>
-                                          <a href="javascript:;" class="btn default"> Cancel </a>
-                                      </div>
-                                  </form>
-                              </div>
-                              <!-- END CHANGE PASSWORD TAB -->
                           </div>
                       </div>
                   </div>
@@ -149,6 +192,7 @@
       </div>
       <!-- END PROFILE CONTENT -->
       <!-- BEGIN AUTOTASK CONTENT -->
+      {% if user.profile.company.id > 1 %}
       <div class="profile-content">
           <div class="row">
               <div class="col-md-12">
@@ -213,6 +257,7 @@
               </div>
           </div>
       </div>
+      {% endif %}
       <!-- END AUTOTASK CONTENT -->
       </div>
       </div>
