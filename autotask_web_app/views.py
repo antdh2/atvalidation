@@ -416,6 +416,12 @@ def validate_input(request, validation_group_id):
     # custom validation groups
     validated = True
     for validation in ticket_validations:
+        ####
+        #
+        # 1. add conditional statement here for mandatory/optional
+        # 2. only apply below validations IF a condition is met which is specified by the user, eg. "If ticket title contains "MOT""
+        #
+        ####
         if validation.picklist_number == -100:
             print(request.POST[validation.key])
             if request.POST[validation.key] == validation.value:
