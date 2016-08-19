@@ -9,6 +9,7 @@ urlpatterns = [
     url(r'^delete_validation/(?P<id>[0-9]+)', views.delete_validation, name='delete_validation'),
     url(r'^account/profile/(?P<id>[0-9]+)/$', views.profile, name='profile'),
     url(r'^create_picklist', views.create_picklist_database, name='create_picklist_database'),
+    url(r'^generate_entities/(?P<id>[0-9]+)/$', views.generate_entities, name='generate_entities'),
     url(r'^$', views.home, name='home'),
     url(r'^1/$', views.index, name='index'),
     url(r'^create_ticket/(?P<id>[0-9]+)/$', views.create_ticket, name='create_ticket'),

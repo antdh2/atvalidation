@@ -61,6 +61,7 @@ class Picklist(models.Model):
 
 class Entity(models.Model):
     name = models.CharField(max_length=254)
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
 
 class ValidationGroup(models.Model):
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE)

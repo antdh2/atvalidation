@@ -60,7 +60,9 @@
                                             {% endfor %}
                                           </select>
                                           <br>
-                                          <input type="submit" style="margin-top: 10px;" />
+                                          <input class="btn green" type="submit" style="margin-top: 10px;" /><br>
+                                          <br>
+                                          <a class="btn green" href="{% url 'generate_entities' user.id %}">Generate Available Entities</a>
                                         </form>
                                     </div>
                                   {% endif %}

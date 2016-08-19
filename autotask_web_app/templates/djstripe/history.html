@@ -7,13 +7,6 @@
     <!-- BEGIN CONTENT BODY -->
   <div class="page-content">
     <!-- BEGIN PAGE HEADER-->
-    {% if messages %}
-      {% for message in messages %}
-        <div class="note{% if message.tags == 'error' %} note-danger {% elif message.tags %} note-{{ message.tags }}"{% endif %}>
-            <p>{{ message }}</p>
-        </div>
-      {% endfor %}
-    {% endif %}
     <!-- END PAGE HEADER-->
     <div class="portlet light portlet-fit ">
       <div class="portlet-title">

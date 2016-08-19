@@ -27,7 +27,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -51,12 +50,12 @@ STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "sk_test_Dke5jy8Q1n4uNY8
 DJSTRIPE_INVOICE_FROM_EMAIL = "info@studiointhecloud.co.uk"
 
 DJSTRIPE_PLANS = {
-    "bronze": {
-        "stripe_plan_id": "bronze",
-        "name": "Bronze",
+    "starter": {
+        "stripe_plan_id": "starter",
+        "name": "Starter",
         "description": "Autotask input validation",
-        "price": 4000,  # £5.00
-        "webprice": 40,
+        "price": 1000,  # £5.00
+        "webprice": 10,
         "currency": "gbp",
         "interval": "month",
         "feature1": "Frontend validation",
@@ -151,8 +150,12 @@ WSGI_APPLICATION = 'autotask.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'atvalidation',
+        'USER': 'postgres',
+        'PASSWORD': 'Mnschnaap1',
+        'HOST': 'localhost',
+        'PORT': '',
     }
 }
 

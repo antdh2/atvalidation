@@ -45,6 +45,65 @@ def handle_user_save(sender, instance, created, **kwargs):
 #
 ############################################################
 
+def generate_entities(request, id):
+    # entities_in_db = Entity.objects.filter(profile=request.user.profile)
+    # for e in entities_in_db:
+    #     e.delete()
+    # First we must know if this user has a subscription equal to starter package
+    if request.user.customer.current_subscription.plan == 'starter':
+        entities_in_db = Entity.objects.filter(profile=request.user.profile)
+        if not entities_in_db:
+            for key, value in STARTER_ENTITIES.items():
+                print(key + ": " + value)
+                Entity.objects.create(name=key, profile=request.user.profile)
+        if entities_in_db:
+            for key, value in STARTER_ENTITIES.items():
+                for entity in entities_in_db:
+                    try:
+                        t = Entity.objects.get(name=key, profile=request.user.profile)
+                    except:
+                        t = None
+                    if t:
+                        continue
+                    else:
+                        Entity.objects.create(name=key, profile=request.user.profile)
+    if request.user.customer.current_subscription.plan == 'standard':
+        entities_in_db = Entity.objects.filter(profile=request.user.profile)
+        if not entities_in_db:
+            for key, value in STANDARD_ENTITIES.items():
+                print(key + ": " + value)
+                Entity.objects.create(name=key, profile=request.user.profile)
+        if entities_in_db:
+            for key, value in STANDARD_ENTITIES.items():
+                for entity in entities_in_db:
+                    try:
+                        t = Entity.objects.get(name=key, profile=request.user.profile)
+                    except:
+                        t = None
+                    if t:
+                        print(t.name)
+                        continue
+                    else:
+                        Entity.objects.create(name=key, profile=request.user.profile)
+    if request.user.customer.current_subscription.plan == 'professional':
+        entities_in_db = Entity.objects.filter(profile=request.user.profile)
+        if not entities_in_db:
+            for key, value in PROFESSIONAL_ENTITIES.items():
+                print(key + ": " + value)
+                Entity.objects.create(name=key, profile=request.user.profile)
+        if entities_in_db:
+            for key, value in PROFESSIONAL_ENTITIES.items():
+                for entity in entities_in_db:
+                    try:
+                        t = Entity.objects.get(name=key, profile=request.user.profile)
+                    except:
+                        t = None
+                    if t:
+                        continue
+                    else:
+                        Entity.objects.create(name=key, profile=request.user.profile)
+    return redirect('input_validation', id)
+
 def home(request):
     return render(request, 'home.html', {})
 
@@ -686,6 +745,10 @@ def create_picklist(request):
 
 
 def create_picklist_database(request):
+    # First we wamt to delete any existing picklist items
+    picklists = Picklist.objects.filter(profile=request.user.profile)
+    for picklist in picklists:
+        picklist.delete()
     file = open('atvar.py', 'r')
     for line in file.readlines():
         # Split the line by whitespace giving ['Account_TerritoryID_Local', '=', '29682778']
@@ -733,6 +796,30 @@ RESOURCE_ROLES = {
     "Admin": 29683587,
     "Home User Engineer": 29683586,
     "Sales": 29683582,
+}
+
+
+STARTER_ENTITIES = {
+    "Ticket": "Ticket",
+}
+
+STANDARD_ENTITIES = {
+    "Ticket": "Ticket",
+    "Contact": "Contact",
+    "Contract": "Contract",
+    "Invoice": "Invoice",
+}
+
+PROFESSIONAL_ENTITIES = {
+    "Ticket": "Ticket",
+    "Contact": "Contact",
+    "Contract": "Contract",
+    "Invoice": "Invoice",
+    "Product": "Product",
+    "Quote": "Quote",
+    "Opportunity": "Opportunity",
+    "Appointment": "Appointment",
+    "Task": "Task",
 }
 
 
