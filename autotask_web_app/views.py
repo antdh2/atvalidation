@@ -440,14 +440,13 @@ def create_home_user_ticket(request, id):
 
 
 def validate_input(request, valgrouprules):
-    triggered = False
+    validated = True
     # Grab all validation group rules from function input (all of these are specific to users company)
     validation_group_rules = valgrouprules
     for v in validation_group_rules:
         # For straight up strings
         if OPERATORS[v.operator](request.POST[v.key], v.value):
             print(v.key + " group rule triggered")
-            triggered = True
             # If the rule has triggered - lets get all validations for this rules group
             validations = Validation.objects.filter(validation_group=v.validation_group)
             # Now we cycle through each validation and check if it is true or not
