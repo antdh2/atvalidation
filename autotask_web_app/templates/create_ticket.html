@@ -55,7 +55,7 @@ $(document).ready(function () {
         </div>
       </div>
       <div class="portlet-body">
-        {% if validation_groups %}
+        <!-- {% if validation_groups %}
         <div class="row">
           <div class="col-md-8">
             <form method="POST" name="apply_validation_form" action="{% url 'create_ticket' ataccount.id %}">
@@ -77,7 +77,7 @@ $(document).ready(function () {
             </form>
           </div>
         </div>
-        {% endif %}
+        {% endif %} -->
         <div class="row">
           <div class="col-md-8">
             <h6 class="card-header primary-color white-text">TICKET INFORMATION</strong></h6>
@@ -243,7 +243,7 @@ $(document).ready(function () {
                       </select>
                     </div>
                   </div>
-                  <input type="submit" style="margin-top: 10px;" />
+                  <input type="submit" class="btn green" style="margin-top: 10px;" />
                 </form>
             </div>
           </div>

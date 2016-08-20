@@ -24,7 +24,7 @@ import operator
 # import the wonderful decorator for stripe
 from djstripe.decorators import subscription_payment_required
 from . import atvar
-from .models import Profile, Picklist, Validation, ValidationGroup, Entity, Company
+from .models import Profile, Picklist, Validation, ValidationGroup, ValidationGroupRule, Entity, Company
 from account.signals import user_logged_in
 
 
@@ -173,17 +173,40 @@ def edit_validation_group(request, id, validation_group_id):
     validation_group = ValidationGroup.objects.get(id=validation_group_id)
     existing_validations = Validation.objects.filter(validation_group=validation_group_id)
     entity_attributes = at.new(validation_group.entity.name)
+    try:
+        validation_group_rule = ValidationGroupRule.objects.get(validation_group=validation_group_id)
+    except:
+        validation_group_rule = None
     values = None
     selected_key = None
     key = None
     if request.method == "POST":
+        if request.POST.get('validation-group-rule-select', False):
+            key = request.POST['key']
+            selected_key = key
+            values = Picklist.objects.filter(company=request.user.profile.company, key__icontains=validation_group.entity.name + "_" + key)
+            return render(request, 'edit_validation_group.html', {"validation_group_rule": validation_group_rule, "OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "values": values, "selected_key": selected_key, "existing_validations": existing_validations, "validation_group": validation_group})
         if request.POST.get('step1-keyselect', False):
             step = 2
             key = request.POST['key']
             selected_key = key
             values = Picklist.objects.filter(company=request.user.profile.company, key__icontains=validation_group.entity.name + "_" + key)
-            return render(request, 'edit_validation_group.html', {"OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "values": values, "selected_key": selected_key, "existing_validations": existing_validations, "validation_group": validation_group})
+            return render(request, 'edit_validation_group.html', {"validation_group_rule": validation_group_rule, "OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "values": values, "selected_key": selected_key, "existing_validations": existing_validations, "validation_group": validation_group})
         if request.POST.get('step2', False):
+            key = request.POST['selected_key']
+            value = request.POST['value']
+            operator = request.POST['operator']
+            mandatory = request.POST.get('mandatory', False)
+            # We have to find the picklist from atvar to associate the right number to the validation
+            # Validation object "value" should match the result of Picklist "key". ie. (atvar.)Ticket_Status_New on Validation should equal 1 on Picklist
+            try:
+                picklist_object = Picklist.objects.get(key=value)
+                picklist = picklist_object.value
+            except:
+                picklist = -100
+            validation = Validation.objects.create(key=key, value=value, operator=operator, entity=validation_group.entity, picklist_number=picklist, validation_group=validation_group, mandatory=mandatory)
+            return render(request, 'edit_validation_group.html', {"validation_group_rule": validation_group_rule, "OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "values": values, "selected_key": selected_key, "existing_validations": existing_validations, "validation_group": validation_group})
+        if request.POST.get('validationgrouprulesubmit', False):
             key = request.POST['selected_key']
             value = request.POST['value']
             operator = request.POST['operator']
@@ -194,10 +217,10 @@ def edit_validation_group(request, id, validation_group_id):
                 picklist = picklist_object.value
             except:
                 picklist = -100
-            validation = Validation.objects.create(key=key, value=value, operator=operator, entity=validation_group.entity, picklist_number=picklist, validation_group=validation_group)
-            return render(request, 'edit_validation_group.html', {"OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "values": values, "selected_key": selected_key, "existing_validations": existing_validations, "validation_group": validation_group})
+            validation_group_rule = ValidationGroupRule.objects.create(key=key, value=value, operator=operator, entity=validation_group.entity, picklist_number=picklist, validation_group=validation_group, company=request.user.profile.company)
+            return render(request, 'edit_validation_group.html', {"validation_group_rule": validation_group_rule, "OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "values": values, "selected_key": selected_key, "existing_validations": existing_validations, "validation_group": validation_group})
 
-    return render(request, 'edit_validation_group.html', {"OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "values": values, "selected_key": selected_key, "existing_validations": existing_validations, "validation_group": validation_group})
+    return render(request, 'edit_validation_group.html', {"validation_group_rule": validation_group_rule, "OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "values": values, "selected_key": selected_key, "existing_validations": existing_validations, "validation_group": validation_group})
 
 def delete_validation_group(request, id):
     userid = request.user.id
@@ -307,30 +330,15 @@ def create_ticket(request, id):
     services = get_contract_services(account_id)
     allocation_codes = get_allocation_codes()
     contracts = get_contracts(account_id)
-    # Grab all validation groups for this user
-    validation_groups = ValidationGroup.objects.filter(company=request.user.profile.company)
+    # Grab all validation group rules for this users company
+    validation_group_rules = ValidationGroupRule.objects.filter(company=request.user.profile.company)
     validated = True
     if request.method == "POST":
-        # First we must check to see if user has selected to apply validation groups
-        if request.POST.get('apply_validation', False):
-            # Grab the selected validation group from form
-            create_ticket_dict['SelectedValidationGroup'] = request.POST['validation-group-name']
-            # Format hidden field info to redisplay info to user
-            for group in validation_groups:
-                if request.POST['validation-group-name'] == str(group.id):
-                    create_ticket_dict['SelectedValidationGroupName'] = group.name
-            # Then refresh the page with our validation group
-            return render(request, 'create_ticket.html', {"create_ticket_dict": create_ticket_dict, "contacts": contacts, "services": services, "allocation_codes": allocation_codes, "contracts": contracts, "roles": roles, "resources": resources, "account_types": account_types, "statuses": statuses, "priorities": priorities, "queue_ids": queue_ids, "ticket_sources": ticket_sources, "issue_types": issue_types, "sub_issue_types": sub_issue_types, "slas": slas, "ticket_types": ticket_types, "ataccount": ataccount,    "validation_groups": validation_groups})
-
-        # If we have a selected validation group, then lets go ahead and check for validations using that group
-        try:
-            if create_ticket_dict['SelectedValidationGroup']:
-                validated = validate_input(request, create_ticket_dict['SelectedValidationGroup'])
-        except KeyError:
-            pass
+        # Lets check if any of our validation groups are triggered
+        validated = validate_input(request, validation_group_rules)
         # if validation fails then return to webpage with an error message (this is handled by function call)
         if not validated:
-            return render(request, 'create_ticket.html', {"create_ticket_dict": create_ticket_dict, "contacts": contacts, "services": services, "allocation_codes": allocation_codes, "contracts": contracts, "roles": roles, "resources": resources, "account_types": account_types, "statuses": statuses, "priorities": priorities, "queue_ids": queue_ids, "ticket_sources": ticket_sources, "issue_types": issue_types, "sub_issue_types": sub_issue_types, "slas": slas, "ticket_types": ticket_types, "ataccount": ataccount,    "validation_groups": validation_groups})
+            return render(request, 'create_ticket.html', {"create_ticket_dict": create_ticket_dict, "contacts": contacts, "services": services, "allocation_codes": allocation_codes, "contracts": contracts, "roles": roles, "resources": resources, "account_types": account_types, "statuses": statuses, "priorities": priorities, "queue_ids": queue_ids, "ticket_sources": ticket_sources, "issue_types": issue_types, "sub_issue_types": sub_issue_types, "slas": slas, "ticket_types": ticket_types, "ataccount": ataccount})
         # if we pass validation, previous line of code is not run and a ticket is created
         # but first lets do some custom work
         # 1) logic for determining which contract to validate
@@ -393,7 +401,7 @@ def create_ticket(request, id):
             Title = request.POST['Title'],
             )
         messages.add_message(request, messages.SUCCESS, ('Ticket - ' + new_ticket.TicketNumber + ' - ' + new_ticket.Title + ' created.'))
-    return render(request, 'create_ticket.html', {"create_ticket_dict": create_ticket_dict, "contacts": contacts, "services": services, "allocation_codes": allocation_codes, "contracts": contracts, "roles": roles, "resources": resources, "account_types": account_types, "statuses": statuses, "priorities": priorities, "queue_ids": queue_ids, "ticket_sources": ticket_sources, "issue_types": issue_types, "sub_issue_types": sub_issue_types, "slas": slas, "ticket_types": ticket_types, "ataccount": ataccount,    "validation_groups": validation_groups})
+    return render(request, 'create_ticket.html', {"create_ticket_dict": create_ticket_dict, "contacts": contacts, "services": services, "allocation_codes": allocation_codes, "contracts": contracts, "roles": roles, "resources": resources, "account_types": account_types, "statuses": statuses, "priorities": priorities, "queue_ids": queue_ids, "ticket_sources": ticket_sources, "issue_types": issue_types, "sub_issue_types": sub_issue_types, "slas": slas, "ticket_types": ticket_types, "ataccount": ataccount})
 
 create_home_user_ticket_dict = {}
 @login_required(login_url='/account/login/')
@@ -409,7 +417,7 @@ def create_home_user_ticket(request, id):
         selected_validation_group = request.POST['validation-group-name']
         validated = validate_input(request, selected_validation_group)
         if not validated:
-            return render(request, 'create_home_user_ticket.html', {"selected_validation_group": selected_validation_group, "ataccount": ataccount,    "validation_groups": validation_groups})
+            return render(request, 'create_home_user_ticket.html', {"selected_validation_group": selected_validation_group, "ataccount": ataccount})
         new_ticket = ticket_create_new(True,
             AccountID = account_id,
             Title = request.POST['title'],
@@ -421,7 +429,7 @@ def create_home_user_ticket(request, id):
             QueueID = request.POST['queueid'],
         )
         messages.add_message(request, messages.SUCCESS, ('Ticket - ' + new_ticket.TicketNumber + ' - ' + new_ticket.Title + ' created.'))
-    return render(request, 'create_home_user_ticket.html', {"selected_validation_group": selected_validation_group, "ataccount": ataccount,    "validation_groups": validation_groups})
+    return render(request, 'create_home_user_ticket.html', {"selected_validation_group": selected_validation_group, "ataccount": ataccount})
 
 
 ############################################################
@@ -431,35 +439,108 @@ def create_home_user_ticket(request, id):
 ############################################################
 
 
-def validate_input(request, validation_group_id):
-    validation_group = ValidationGroup.objects.get(id=validation_group_id)
-    ticket_validations = Validation.objects.filter(validation_group=validation_group_id)
-    # custom validation groups
-    validated = True
-    for validation in ticket_validations:
-        ####
-        #
-        # 1. add conditional statement here for mandatory/optional
-        # 2. only apply below validations IF a condition is met which is specified by the user, eg. "If ticket title contains "MOT""
-        #
-        ####
-        if validation.picklist_number == -100:
-            print(request.POST[validation.key])
-            if request.POST[validation.key] == validation.value:
-                messages.add_message(request, messages.SUCCESS, mark_safe(validation.key + " valid."))
-                continue
-            if not OPERATORS[validation.operator](request.POST[validation.key].lower(), validation.value):
-                validated = False
-                messages.add_message(request, messages.ERROR, mark_safe(validation.key + " not valid.<br><small>" + validation.key + " must be " + validation.operator + " " + validation.value + "</small>"))
-        elif validation.picklist_number != -100:
-            try:
-                if not OPERATORS[validation.operator](int(request.POST[validation.key].lower()), validation.picklist_number):
-                    validated = False
-                    messages.add_message(request, messages.ERROR, mark_safe(validation.key + " not valid.<br><small>" + validation.key + " must be " + validation.operator + " " + validation.value + "</small>"))
-            except:
-                messages.add_message(request, messages.ERROR, mark_safe(validation.key + " is empty or not selected.<br><small>" + validation.key + " must be " + validation.operator + " " + validation.value + "</small>"))
-                print("invalid literal for int() with base 10:")
-                pass
+def validate_input(request, valgrouprules):
+    triggered = False
+    # Grab all validation group rules from function input (all of these are specific to users company)
+    validation_group_rules = valgrouprules
+    for v in validation_group_rules:
+        # For straight up strings
+        if OPERATORS[v.operator](request.POST[v.key], v.value):
+            print(v.key + " group rule triggered")
+            triggered = True
+            # If the rule has triggered - lets get all validations for this rules group
+            validations = Validation.objects.filter(validation_group=v.validation_group)
+            # Now we cycle through each validation and check if it is true or not
+            for validation in validations:
+                # First we want to check whether or not the validation is enforced or not
+                if validation.mandatory:
+                    # If it is, we need to check whether this is a picklist entity or not, -100 means it isn't and value must be a string
+                    if validation.picklist_number == -100:
+                        # If the user input is equal to the validation value (eg. Title = "MOT Ticket")
+                        if request.POST[validation.key] == validation.value:
+                            # Then we display a success message and skip the rest of the loop for performance
+                            messages.add_message(request, messages.SUCCESS, mark_safe(validation.key + " valid."))
+                            continue
+                        # If this condition is false then the validation failed and we need to set validated to False and display a helpful error message
+                        # Below line equates to eg. "Title" == "MOT Tic" when it should be "MOT Ticket"
+                        if not OPERATORS[validation.operator](request.POST[validation.key].lower(), validation.value):
+                            validated = False
+                            messages.add_message(request, messages.ERROR, mark_safe("<strong>ERROR:</strong> " + validation.key + " not valid.<br><small>" + validation.key + " must be " + validation.operator + " " + validation.value + "</small>"))
+                    # We also need to check if the validation IS from an Autotask picklist (ie. predetermined values imported from AT db)
+                    # Unlike non-picklist entities these are ALWAYS numbers
+                    elif validation.picklist_number != -100:
+                        # Using a try catch block because we can get invalid literal for int() with base 10 errors due to HTML inputting empty values as ""
+                        # which causes the int() function to throw a hissy fit as "" is clearly not an integer.
+                        try:
+                            # Below equasion would read as "QueueID" == "29736321" a rather simple check
+                            # If it's failed validation, set validated to say so and display an error message
+                            if not OPERATORS[validation.operator](int(request.POST[validation.key].lower()), validation.picklist_number):
+                                validated = False
+                                messages.add_message(request, messages.ERROR, mark_safe("<strong>ERROR:</strong> " + validation.key + " not valid.<br><small>" + validation.key + " must be " + validation.operator + " " + validation.value + "</small>"))
+                        # As explained above if user input has a select vvalue for e.g which has been left unselected, the POST values will be ""
+                        # but we can handle this nicely by saying to the user they forgot to select something which needs to be validated
+                        except:
+                            messages.add_message(request, messages.ERROR, mark_safe("<strong>ERROR:</strong> " + validation.key + " is empty or not selected.<br><small>" + validation.key + " must be " + validation.operator + " " + validation.value + "</small>"))
+                            print("invalid literal for int() with base 10:")
+                            validated = False
+                # Now if the validation is NOT mandatory, we do the same again but with different error messages
+                else:
+                    if validation.picklist_number == -100:
+                        print(request.POST[validation.key])
+                        if request.POST[validation.key] == validation.value:
+                            messages.add_message(request, messages.SUCCESS, mark_safe(validation.key + " valid."))
+                        if not OPERATORS[validation.operator](request.POST[validation.key].lower(), validation.value):
+                            validated = False
+                            messages.add_message(request, messages.INFO, mark_safe("<strong>WARNING:</strong> " + validation.key + " may be incorrect.<br><small>" + validation.key + " should be " + validation.operator + " " + validation.value + "<br>Please be aware that this request may be incorrect yet has still been processed as it has been marked as not mandatory." + "</small>"))
+                    elif validation.picklist_number != -100:
+                        try:
+                            if not OPERATORS[validation.operator](int(request.POST[validation.key].lower()), validation.picklist_number):
+                                validated = False
+                                messages.add_message(request, messages.INFO, mark_safe("<strong>WARNING:</strong> " + validation.key + " may be incorrect.<br><small>" + validation.key + " should be " + validation.operator + " " + validation.value + "<br>Please be aware that this request may be incorrect yet has still been processed as it has been marked as not mandatory." + "</small>"))
+                        except:
+                            messages.add_message(request, messages.INFO, mark_safe("<strong>WARNING:</strong> " + validation.key + " may be incorrect.<br><small>" + validation.key + " should be " + validation.operator + " " + validation.value + "<br>Please be aware that this request may be incorrect yet has still been processed as it has been marked as not mandatory." + "</small>"))
+                            print("invalid literal for int() with base 10:")
+                            validated = False
+
+
+    # # Create empty array to store validation groups and which belong to this users compayny
+    # validation_groups = []
+    # for v in validation_group_rules:
+    #     # If the individual validation group rule's validation group FK company id is the same as the rules company id
+    #     # then it means this validation group belongs to this user and group rule
+    #     if v.validation_group.company == v.company:
+    #         validation_groups.append(v.validation_group)
+    # for v in validation_groups:
+    #     print(v.name)
+    # ticket_validations = Validation.objects.filter(validation_group=validation_group_id)
+    # print(request.profile)
+    # # custom validation groups
+    # for validation in ticket_validations:
+    #     ####
+    #     #
+    #     # 2. only apply below validations IF a condition is met which is specified by the user, eg. "If ticket title contains "MOT""
+    #     #
+    #     ####
+    #     if validation.mandatory:
+    #         if validation.picklist_number == -100:
+    #             print(request.POST[validation.key])
+    #             if request.POST[validation.key] == validation.value:
+    #                 messages.add_message(request, messages.SUCCESS, mark_safe(validation.key + " valid."))
+    #                 continue
+    #             if not OPERATORS[validation.operator](request.POST[validation.key].lower(), validation.value):
+    #                 validated = False
+    #                 messages.add_message(request, messages.ERROR, mark_safe("<strong>ERROR:</strong> " + validation.key + " not valid.<br><small>" + validation.key + " must be " + validation.operator + " " + validation.value + "</small>"))
+    #         elif validation.picklist_number != -100:
+    #             try:
+    #                 if not OPERATORS[validation.operator](int(request.POST[validation.key].lower()), validation.picklist_number):
+    #                     validated = False
+    #                     messages.add_message(request, messages.ERROR, mark_safe("<strong>ERROR:</strong> " + validation.key + " not valid.<br><small>" + validation.key + " must be " + validation.operator + " " + validation.value + "</small>"))
+    #             except:
+    #                 messages.add_message(request, messages.ERROR, mark_safe("<strong>ERROR:</strong> " + validation.key + " is empty or not selected.<br><small>" + validation.key + " must be " + validation.operator + " " + validation.value + "</small>"))
+    #                 print("invalid literal for int() with base 10:")
+    #                 pass
+    #     else:
+    #         messages.add_message(request, messages.INFO, mark_safe("<strong>WARNING:</strong> " + validation.key + " may be incorrect.<br><small>" + validation.key + " should be " + validation.operator + " " + validation.value + "<br>Please be aware that this request may be incorrect yet has still been processed as it has been marked as not mandatory." + "</small>"))
     return validated
 
 

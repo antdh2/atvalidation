@@ -93,6 +93,10 @@ input#id_remember {
     border-left: 4px solid #f0868e;
 }
 
+.note.note-warning {
+    border-left: 4px solid #f3cc31;
+}
+
 .disabled a {
     color: #e0e0e0 !important;
 }

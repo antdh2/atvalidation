@@ -40,6 +40,15 @@ class ValidationGroup(models.Model):
     name = models.CharField(max_length=254)
     entity = models.ForeignKey(Entity, on_delete=models.CASCADE)
 
+class ValidationGroupRule(models.Model):
+    entity = models.ForeignKey(Entity, on_delete=models.CASCADE)
+    key = models.CharField(max_length=254)
+    operator = models.CharField(max_length=254)
+    picklist_number = models.IntegerField()
+    value = models.CharField(max_length=254)
+    validation_group = models.ForeignKey(ValidationGroup, on_delete=models.CASCADE)
+    company = models.ForeignKey(Company)
+
 class Validation(models.Model):
     entity = models.ForeignKey(Entity, on_delete=models.CASCADE)
     key = models.CharField(max_length=254)
@@ -47,3 +56,4 @@ class Validation(models.Model):
     picklist_number = models.IntegerField()
     value = models.CharField(max_length=254)
     validation_group = models.ForeignKey(ValidationGroup, on_delete=models.CASCADE)
+    mandatory = models.BooleanField(default=True)
