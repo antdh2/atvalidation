@@ -403,34 +403,6 @@ def create_ticket(request, id):
         messages.add_message(request, messages.SUCCESS, ('Ticket - ' + new_ticket.TicketNumber + ' - ' + new_ticket.Title + ' created.'))
     return render(request, 'create_ticket.html', {"create_ticket_dict": create_ticket_dict, "contacts": contacts, "services": services, "allocation_codes": allocation_codes, "contracts": contracts, "roles": roles, "resources": resources, "account_types": account_types, "statuses": statuses, "priorities": priorities, "queue_ids": queue_ids, "ticket_sources": ticket_sources, "issue_types": issue_types, "sub_issue_types": sub_issue_types, "slas": slas, "ticket_types": ticket_types, "ataccount": ataccount})
 
-create_home_user_ticket_dict = {}
-@login_required(login_url='/account/login/')
-def create_home_user_ticket(request, id):
-    if request.user:
-        at = autotask_login_function(request, request.user.profile.autotask_username, request.user.profile.autotask_password)
-    account_id = id
-    ataccount = get_account(account_id)
-    validation_groups = ValidationGroup.objects.filter(profile=request.user.profile)
-    selected_validation_group = None
-    if request.method == "POST":
-        # Check that we are validated for input
-        selected_validation_group = request.POST['validation-group-name']
-        validated = validate_input(request, selected_validation_group)
-        if not validated:
-            return render(request, 'create_home_user_ticket.html', {"selected_validation_group": selected_validation_group, "ataccount": ataccount})
-        new_ticket = ticket_create_new(True,
-            AccountID = account_id,
-            Title = request.POST['title'],
-            Description = request.POST['description'],
-            DueDateTime = request.POST['duedatetime'],
-            EstimatedHours = request.POST['estimatedhours'],
-            Priority = request.POST['priority'],
-            Status = request.POST['status'],
-            QueueID = request.POST['queueid'],
-        )
-        messages.add_message(request, messages.SUCCESS, ('Ticket - ' + new_ticket.TicketNumber + ' - ' + new_ticket.Title + ' created.'))
-    return render(request, 'create_home_user_ticket.html', {"selected_validation_group": selected_validation_group, "ataccount": ataccount})
-
 
 ############################################################
 #
@@ -440,14 +412,17 @@ def create_home_user_ticket(request, id):
 
 
 def validate_input(request, valgrouprules):
+    error_message = []
     validated = True
     # Grab all validation group rules from function input (all of these are specific to users company)
     validation_group_rules = valgrouprules
     for v in validation_group_rules:
         # For straight up strings
+        # This segment of code is ONLY triggered when the validation trigger is a string matching a strings
+        # e.g. "Title" == "MOT Ticket" rather than the other scenario which is "QueueID" = 28723212
         if OPERATORS[v.operator](request.POST[v.key], v.value):
-            print(v.key + " group rule triggered")
             # If the rule has triggered - lets get all validations for this rules group
+            error_message.append("<strong>Validation Group " + "''" + v.validation_group.name + "''" + " has been triggered by the following rule</strong><br>" + v.key + " " + v.operator + " " + v.value + ".<br>" + "<small>Validation errors will appear below</small><br><br>")
             validations = Validation.objects.filter(validation_group=v.validation_group)
             # Now we cycle through each validation and check if it is true or not
             for validation in validations:
@@ -458,13 +433,11 @@ def validate_input(request, valgrouprules):
                         # If the user input is equal to the validation value (eg. Title = "MOT Ticket")
                         if request.POST[validation.key] == validation.value:
                             # Then we display a success message and skip the rest of the loop for performance
-                            messages.add_message(request, messages.SUCCESS, mark_safe(validation.key + " valid."))
-                            continue
+                            pass
                         # If this condition is false then the validation failed and we need to set validated to False and display a helpful error message
                         # Below line equates to eg. "Title" == "MOT Tic" when it should be "MOT Ticket"
                         if not OPERATORS[validation.operator](request.POST[validation.key].lower(), validation.value):
-                            validated = False
-                            messages.add_message(request, messages.ERROR, mark_safe("<strong>ERROR:</strong> " + validation.key + " not valid.<br><small>" + validation.key + " must be " + validation.operator + " " + validation.value + "</small>"))
+                            error_message.append("<strong>ERROR:</strong> " + validation.key + " not valid.<br><small>" + validation.key + " must be " + validation.operator + " " + validation.value + "</small><br><br>")
                     # We also need to check if the validation IS from an Autotask picklist (ie. predetermined values imported from AT db)
                     # Unlike non-picklist entities these are ALWAYS numbers
                     elif validation.picklist_number != -100:
@@ -473,73 +446,97 @@ def validate_input(request, valgrouprules):
                         try:
                             # Below equasion would read as "QueueID" == "29736321" a rather simple check
                             # If it's failed validation, set validated to say so and display an error message
-                            if not OPERATORS[validation.operator](int(request.POST[validation.key].lower()), validation.picklist_number):
+                            if not OPERATORS[validation.operator](int(request.POST[validation.key]), validation.picklist_number):
                                 validated = False
-                                messages.add_message(request, messages.ERROR, mark_safe("<strong>ERROR:</strong> " + validation.key + " not valid.<br><small>" + validation.key + " must be " + validation.operator + " " + validation.value + "</small>"))
+                                error_message.append("<strong>ERROR:</strong> " + validation.key + " not valid.<br><small>" + validation.key + " must be " + validation.operator + " " + validation.value + "</small><br><br>")
                         # As explained above if user input has a select vvalue for e.g which has been left unselected, the POST values will be ""
                         # but we can handle this nicely by saying to the user they forgot to select something which needs to be validated
                         except:
-                            messages.add_message(request, messages.ERROR, mark_safe("<strong>ERROR:</strong> " + validation.key + " is empty or not selected.<br><small>" + validation.key + " must be " + validation.operator + " " + validation.value + "</small>"))
+                            error_message.append("<strong>ERROR:</strong> " + validation.key + " is empty or not selected.<br><small>" + validation.key + " must be " + validation.operator + " " + validation.value + "</small><br><br>")
                             print("invalid literal for int() with base 10:")
                             validated = False
                 # Now if the validation is NOT mandatory, we do the same again but with different error messages
                 else:
                     if validation.picklist_number == -100:
-                        print(request.POST[validation.key])
                         if request.POST[validation.key] == validation.value:
-                            messages.add_message(request, messages.SUCCESS, mark_safe(validation.key + " valid."))
+                            pass
                         if not OPERATORS[validation.operator](request.POST[validation.key].lower(), validation.value):
                             validated = False
-                            messages.add_message(request, messages.INFO, mark_safe("<strong>WARNING:</strong> " + validation.key + " may be incorrect.<br><small>" + validation.key + " should be " + validation.operator + " " + validation.value + "<br>Please be aware that this request may be incorrect yet has still been processed as it has been marked as not mandatory." + "</small>"))
+                            error_message.append("<strong>WARNING:</strong> " + validation.key + " may be incorrect.<br><small>" + validation.key + " should be " + validation.operator + " " + validation.value + "<br>Please be aware that this request may be incorrect yet has still been processed as it has been marked as not mandatory." + "</small><br><br>")
                     elif validation.picklist_number != -100:
                         try:
-                            if not OPERATORS[validation.operator](int(request.POST[validation.key].lower()), validation.picklist_number):
+                            if not OPERATORS[validation.operator](int(request.POST[validation.key]), validation.picklist_number):
                                 validated = False
-                                messages.add_message(request, messages.INFO, mark_safe("<strong>WARNING:</strong> " + validation.key + " may be incorrect.<br><small>" + validation.key + " should be " + validation.operator + " " + validation.value + "<br>Please be aware that this request may be incorrect yet has still been processed as it has been marked as not mandatory." + "</small>"))
+                                error_message.append("<strong>WARNING:</strong> " + validation.key + " may be incorrect.<br><small>" + validation.key + " should be " + validation.operator + " " + validation.value + "<br>Please be aware that this request may be incorrect yet has still been processed as it has been marked as not mandatory." + "</small><br><br>")
                         except:
-                            messages.add_message(request, messages.INFO, mark_safe("<strong>WARNING:</strong> " + validation.key + " may be incorrect.<br><small>" + validation.key + " should be " + validation.operator + " " + validation.value + "<br>Please be aware that this request may be incorrect yet has still been processed as it has been marked as not mandatory." + "</small>"))
-                            print("invalid literal for int() with base 10:")
-                            validated = False
+                            error_message.append("<strong>WARNING:</strong> " + validation.key + " may be incorrect.<br><small>" + validation.key + " should be " + validation.operator + " " + validation.value + "<br>Please be aware that this request may be incorrect yet has still been processed as it has been marked as not mandatory." + "</small><br><br>")
+                            print("invalid literal for int() with base 10: 234")
+        # IF we do not have a string match, we then need to check if there is a picklist match
+        # e.g checking that a dropdown box matches - "QueueID" == 28723212 would be read as 28723212 == 28723212
+        # When using int() we must use a try catch block to process the error if user hasnt selected the appropriate drop down
+        try:
+            if OPERATORS[v.operator](int(request.POST[v.key]), v.picklist_number):
+                error_message.append("<strong>Validation Group " + "''" + v.validation_group.name + "''" + " has been triggered by the following rule</strong><br>" + v.key + " " + v.operator + " " + v.value + ".<br>" + "<small>Validation errors will appear below</small><br><br>")
+                # If the rule has triggered - lets get all validations for this rules group
+                validations = Validation.objects.filter(validation_group=v.validation_group)
+                # Now we cycle through each validation and check if it is true or not
+                for validation in validations:
+                    # First we want to check whether or not the validation is enforced or not
+                    if validation.mandatory:
+                        # If it is, we need to check whether this is a picklist entity or not, -100 means it isn't and value must be a string
+                        if validation.picklist_number == -100:
+                            # If the user input is equal to the validation value (eg. Title = "MOT Ticket")
+                            if request.POST[validation.key] == validation.value:
+                                # Then we display a success message and skip the rest of the loop for performance
+                                pass
+                            # If this condition is false then the validation failed and we need to set validated to False and display a helpful error message
+                            # Below line equates to eg. "Title" == "MOT Tic" when it should be "MOT Ticket"
+                            if not OPERATORS[validation.operator](request.POST[validation.key].lower(), validation.value):
+                                validated = False
+                                error_message.append("<strong>ERROR:</strong> " + validation.key + " not valid.<br><small>" + validation.key + " must be " + validation.operator + " " + validation.value + "</small><br><br>")
+                        # We also need to check if the validation IS from an Autotask picklist (ie. predetermined values imported from AT db)
+                        # Unlike non-picklist entities these are ALWAYS numbers
+                        elif validation.picklist_number != -100:
+                            # Using a try catch block because we can get invalid literal for int() with base 10 errors due to HTML inputting empty values as ""
+                            # which causes the int() function to throw a hissy fit as "" is clearly not an integer.
+                            try:
+                                # Below equasion would read as "QueueID" == "29736321" a rather simple check
+                                # If it's failed validation, set validated to say so and display an error message
+                                if not OPERATORS[validation.operator](int(request.POST[validation.key].lower()), validation.picklist_number):
+                                    validated = False
+                                    error_message.append("<strong>ERROR:</strong> " + validation.key + " not valid.<br><small>" + validation.key + " must be " + validation.operator + " " + validation.value + "</small><br><br>")
+                            # As explained above if user input has a select vvalue for e.g which has been left unselected, the POST values will be ""
+                            # but we can handle this nicely by saying to the user they forgot to select something which needs to be validated
+                            except:
+                                error_message.append("<strong>ERROR:</strong> " + validation.key + " is empty or not selected.<br><small>" + validation.key + " must be " + validation.operator + " " + validation.value + "</small><br><br>")
+                                print("invalid literal for int() with base 10:")
+                                validated = False
+                    # Now if the validation is NOT mandatory, we do the same again but with different error messages
+                    else:
+                        if validation.picklist_number == -100:
+                            print(request.POST[validation.key])
+                            if request.POST[validation.key] == validation.value:
+                                pass
+                            if not OPERATORS[validation.operator](request.POST[validation.key].lower(), validation.value):
+                                validated = False
+                                error_message.append("<strong>WARNING:</strong> " + validation.key + " may be incorrect.<br><small>" + validation.key + " should be " + validation.operator + " " + validation.value + "<br>Please be aware that this request may be incorrect yet has still been processed as it has been marked as not mandatory." + "</small><br><br>")
+                        elif validation.picklist_number != -100:
+                            try:
+                                if not OPERATORS[validation.operator](int(request.POST[validation.key].lower()), validation.picklist_number):
+                                    validated = False
+                                    error_message.append("<strong>WARNING:</strong> " + validation.key + " may be incorrect.<br><small>" + validation.key + " should be " + validation.operator + " " + validation.value + "<br>Please be aware that this request may be incorrect yet has still been processed as it has been marked as not mandatory." + "</small><br><br>")
+                            except:
+                                error_message.append("<strong>WARNING:</strong> " + validation.key + " may be incorrect.<br><small>" + validation.key + " should be " + validation.operator + " " + validation.value + "<br>Please be aware that this request may be incorrect yet has still been processed as it has been marked as not mandatory." + "</small><br><br>")
+                                print("invalid literal for int() with base 10: 555555")
+                                print(error_message['6'])
+                                validated = False
+        except:
+            print("invalid literal for int() with base 10: rule trigger not a match")
 
-
-    # # Create empty array to store validation groups and which belong to this users compayny
-    # validation_groups = []
-    # for v in validation_group_rules:
-    #     # If the individual validation group rule's validation group FK company id is the same as the rules company id
-    #     # then it means this validation group belongs to this user and group rule
-    #     if v.validation_group.company == v.company:
-    #         validation_groups.append(v.validation_group)
-    # for v in validation_groups:
-    #     print(v.name)
-    # ticket_validations = Validation.objects.filter(validation_group=validation_group_id)
-    # print(request.profile)
-    # # custom validation groups
-    # for validation in ticket_validations:
-    #     ####
-    #     #
-    #     # 2. only apply below validations IF a condition is met which is specified by the user, eg. "If ticket title contains "MOT""
-    #     #
-    #     ####
-    #     if validation.mandatory:
-    #         if validation.picklist_number == -100:
-    #             print(request.POST[validation.key])
-    #             if request.POST[validation.key] == validation.value:
-    #                 messages.add_message(request, messages.SUCCESS, mark_safe(validation.key + " valid."))
-    #                 continue
-    #             if not OPERATORS[validation.operator](request.POST[validation.key].lower(), validation.value):
-    #                 validated = False
-    #                 messages.add_message(request, messages.ERROR, mark_safe("<strong>ERROR:</strong> " + validation.key + " not valid.<br><small>" + validation.key + " must be " + validation.operator + " " + validation.value + "</small>"))
-    #         elif validation.picklist_number != -100:
-    #             try:
-    #                 if not OPERATORS[validation.operator](int(request.POST[validation.key].lower()), validation.picklist_number):
-    #                     validated = False
-    #                     messages.add_message(request, messages.ERROR, mark_safe("<strong>ERROR:</strong> " + validation.key + " not valid.<br><small>" + validation.key + " must be " + validation.operator + " " + validation.value + "</small>"))
-    #             except:
-    #                 messages.add_message(request, messages.ERROR, mark_safe("<strong>ERROR:</strong> " + validation.key + " is empty or not selected.<br><small>" + validation.key + " must be " + validation.operator + " " + validation.value + "</small>"))
-    #                 print("invalid literal for int() with base 10:")
-    #                 pass
-    #     else:
-    #         messages.add_message(request, messages.INFO, mark_safe("<strong>WARNING:</strong> " + validation.key + " may be incorrect.<br><small>" + validation.key + " should be " + validation.operator + " " + validation.value + "<br>Please be aware that this request may be incorrect yet has still been processed as it has been marked as not mandatory." + "</small>"))
+    cleaned_error_message = ""
+    for msg in error_message:
+        cleaned_error_message += msg
+    messages.add_message(request, messages.INFO, mark_safe(cleaned_error_message))
     return validated
 
 
