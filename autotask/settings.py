@@ -37,7 +37,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'autotask_api_app',
     'autotask_web_app',
     'account',
     'djstripe',
