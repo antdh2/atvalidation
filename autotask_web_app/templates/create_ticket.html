@@ -79,17 +79,17 @@ $(document).ready(function () {
         </div>
         {% endif %} -->
         <div class="row">
-          <div class="col-md-8">
+          <div class="col-md-5">
             <h6 class="card-header primary-color white-text">TICKET INFORMATION</strong></h6>
             <div class="card-block">
-                <form id="create-ticket" action="{% url 'create_ticket' ataccount.id %}" method="post">
+                <form id="create-ticket"  method="POST">
                   {% csrf_token %}
                   <div class="form-group">
                     <label>Ticket Title</label>
-                    <input type="text" class="form-control" placeholder="Ticket Title" name="Title"></input>
+                    <input type="text" class="form-control" placeholder="Ticket Title" name="Title" id="Title"></input>
                     <br>
                     <label>Ticket Contact</label>
-                    <select class="form-control priority" name="ContactID">
+                    <select class="form-control priority" name="ContactID" id="ContactID">
                       <option value="">Please select...</option>
                       <option value="">None</option>
                       {% for contact in contacts %}
@@ -100,12 +100,12 @@ $(document).ready(function () {
                   <br>
                   <div class="form-group">
                     <label>Ticket Description</label>
-                    <textarea class="form-control" rows="3" placeholder="Enter Ticket Description" name="Description"></textarea>
+                    <textarea class="form-control" rows="3" placeholder="Enter Ticket Description" name="Description" id="Description"></textarea>
                   </div>
                   <div class="row">
                     <div class="col-md-6">
                       <label>Ticket Status</label>
-                      <select class="form-control" name="Status">
+                      <select class="form-control" name="Status" id="Status">
                         <option value="">Please select...</option>
                         <option value="">None</option>
                         {% for status in statuses %}
@@ -114,7 +114,7 @@ $(document).ready(function () {
                       </select>
                       <br>
                       <label>Ticket Priority</label>
-                      <select class="form-control priority" name="Priority">
+                      <select class="form-control priority" name="Priority" id="Priority">
                         <option value="">Please select...</option>
                         <option value="">None</option>
                         {% for priority in priorities %}
@@ -124,11 +124,11 @@ $(document).ready(function () {
                       <br>
                       <label>Ticket Due Date</label>
                       <div class="form-group" data-date-start-date="+0d">
-                        <input name="DueDateTime" class="form-control form-control-inline input-medium date-picker" size="16" type="text">
+                        <input name="DueDateTime" id="DueDateTime" class="form-control form-control-inline input-medium date-picker" size="16" type="text">
                       </div>
                       <div class="form-group">
                         <label>Ticket Estimated Hours</label>
-                            <input type="text" class="form-control" placeholder="Estimated Hours" name="EstimatedHours"></input>
+                            <input type="text" class="form-control" placeholder="Estimated Hours" name="EstimatedHours" id="EstimatedHours"></input>
                     </div>
                   </div>
                     <div class="col-md-6">
@@ -175,7 +175,7 @@ $(document).ready(function () {
 
                   <h6 class="card-header primary-color white-text">ASSIGNMENT</strong></h6>
                   <label>Assign to Queue</label>
-                  <select class="form-control" name="QueueID">
+                  <select class="form-control" name="QueueID" id="QueueID">
                     <option value="">Please select...</option>
                     <option value="">None</option>
                     {% for queue_id in queue_ids %}
@@ -193,7 +193,7 @@ $(document).ready(function () {
                   </select>
                   <br>
                   <label>Role</label>
-                  <select class="form-control" name="AssignedResourceRoleID">
+                  <select class="form-control" name="AssignedResourceRoleID" id="AssignedResourceRoleID">
                     <option value="">Please select...</option>
                     <option value="">None</option>
                     {% for role in roles %}
@@ -206,7 +206,7 @@ $(document).ready(function () {
                   <div class="row">
                     <div class="col-md-6">
                       <label>Contract</label>
-                      <select class="form-control" name="ContractID">
+                      <select class="form-control" name="ContractID" id="ContractID">
                         {% if not contracts %}
                           <option value="">No contracts for this account</option>
                         {% else %}
@@ -247,6 +247,11 @@ $(document).ready(function () {
                 </form>
             </div>
           </div>
+          <div class="col-md-7">
+            <div id="error_msg">
+
+            </div>
+          </div>
         </div>
       </div>
   </div>
@@ -259,4 +264,78 @@ $(document).ready(function () {
 </div>
 <!-- END CONTENT BODY -->
 <!-- END CONTENT -->
+
+<script type="text/javascript">
+    $(document).on('submit','#create-ticket', function(e) {
+      e.preventDefault();
+      console.log("form submitted")
+      create_ticket();
+    });
+
+    // AJAX for posting
+    function create_ticket() {
+        console.log("create post is working!") // sanity check
+        $.ajax({
+            url : "{% url 'ajax_create_ticket' %}", // the endpoint
+            type : "POST", // http method
+            data : {
+              AllocationCodeID:$('#AllocationCodeID').val(),
+              AssignedResourceID:$('#AssignedResourceID').val(),
+              AssignedResourceRoleID:$('#AssignedResourceRoleID').val(),
+              ContactID:$('#ContactID').val(),
+              ContractID:$('#ContractID').val(),
+              Description:$('#Description').val(),
+              DueDateTime:$('#DueDateTime').val(),
+              EstimatedHours:$('#EstimatedHours').val(),
+              IssueType:$('#IssueType').val(),
+              Priority:$('#Priority').val(),
+              QueueID:$('#QueueID').val(),
+              ServiceLevelAgreementID:$('#ServiceLevelAgreementID').val(),
+              Status:$('#Status').val(),
+              SubIssueType:$('#SubIssueType').val(),
+              TicketType:$('#TicketType').val(),
+              Title:$('#Title').val(),
+             }, // data sent with the post request
+
+            // handle a successful response
+            success : function(json) {
+                $('#AllocationCodeID').val('');
+                $('#AssignedResourceID').val('');
+                $('#AssignedResourceRoleID').val('');
+                $('#ContactID').val('');
+                $('#ContractID').val('');
+                $('#Description').val('');
+                $('#DueDateTime').val('');
+                $('#EstimatedHours').val('');
+                $('#IssueType').val('');
+                $('#Priority').val('');
+                $('#QueueID').val('');
+                $('#ServiceLevelAgreementID').val('');
+                $('#Status').val('');
+                $('#SubIssueType').val('');
+                $('#TicketType').val('');
+                $('#Title').val('');
+                console.log(json); // log the returned json to the console
+                console.log("success"); // another sanity check
+                $("#error_msg").prepend("<div class='note note-info'>" + json[0].message + "</div>");
+                console.log(json[0].message);
+            },
+
+            // handle a non-successful response
+            error : function(xhr,errmsg,err) {
+                $('#error_msg').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+                    " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+                console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+            }
+        });
+    };
+
+
+    function update_messages(messages){
+      $("#error_msg").html("");
+      $.each(messages, function (i, m) {
+                      $("#error_msg").append("<div class='alert alert-"+m.level+"''>"+m.message+"</div>");
+    })};
+</script>
+<script src="{% static 'js/main.js' %}"></script>
 {% endblock %}
