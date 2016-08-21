@@ -340,19 +340,10 @@ def ajax_create_ticket(request):
                     "message": message.message,
                     "extra_tags": message.tags,
             })
-            return HttpResponse(
-                json.dumps(django_messages),
-                content_type="application/json"
-            )
-        return HttpResponse(
-            json.dumps(response_data),
-            content_type="application/json"
-        )
+            return HttpResponse(json.dumps(django_messages), content_type="application/json")
+        return HttpResponse(json.dumps(response_data), content_type="application/json")
     else:
-        return HttpResponse(
-            json.dumps({"nothing to see": "this isn't happening"}),
-            content_type="application/json"
-        )
+        return HttpResponse(json.dumps({"nothing to see": "this isn't happening"}), content_type="application/json")
 
 create_ticket_dict = {}
 @login_required(login_url='/account/login/')

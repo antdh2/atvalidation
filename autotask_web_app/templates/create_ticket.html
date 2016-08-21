@@ -243,7 +243,7 @@ $(document).ready(function () {
                       </select>
                     </div>
                   </div>
-                  <input type="submit" class="btn green" style="margin-top: 10px;" />
+                  <input id="submit" type="submit" class="btn green" style="margin-top: 10px;" />
                 </form>
             </div>
           </div>
@@ -264,19 +264,73 @@ $(document).ready(function () {
 </div>
 <!-- END CONTENT BODY -->
 <!-- END CONTENT -->
-
 <script type="text/javascript">
+    $(document).ready(function(){
+        $("#AllocationCodeID, #AssignedResourceID, #ContactID, #ContractID, #Description, #DueDateTime, #EstimatedHours, #IssueType, #Priority, #QueueID, #ServiceLevelAgreementID, #Status, #SubIssueType, #TicketType, #Title").focusout(function(){
+          check_ticket();
+        });
+    });
+
+
     $(document).on('submit','#create-ticket', function(e) {
       e.preventDefault();
       console.log("form submitted")
       create_ticket();
     });
 
+    // AJAX for checking
+    function check_ticket() {
+        console.log("check post is working!") // sanity check
+        $.ajax({
+            url : "{% url 'ajax_create_ticket' %}", // the endpoint
+            type : "POST", // http method
+            data : {
+              AllocationCodeID:$('#AllocationCodeID').val(),
+              AssignedResourceID:$('#AssignedResourceID').val(),
+              AssignedResourceRoleID:$('#AssignedResourceRoleID').val(),
+              ContactID:$('#ContactID').val(),
+              ContractID:$('#ContractID').val(),
+              Description:$('#Description').val(),
+              DueDateTime:$('#DueDateTime').val(),
+              EstimatedHours:$('#EstimatedHours').val(),
+              IssueType:$('#IssueType').val(),
+              Priority:$('#Priority').val(),
+              QueueID:$('#QueueID').val(),
+              ServiceLevelAgreementID:$('#ServiceLevelAgreementID').val(),
+              Status:$('#Status').val(),
+              SubIssueType:$('#SubIssueType').val(),
+              TicketType:$('#TicketType').val(),
+              Title:$('#Title').val(),
+             }, // data sent with the post request
+
+            // handle a successful response
+            success : function(json) {
+                if (!$.trim( $("#error_msg").html())) {
+                  $('#submit').prop('disabled', true);
+                };
+                if ($.trim( $("#error_msg").html())) {
+                  $('#submit').prop('disabled', false);
+                };
+                $('#error_msg').html('');
+                console.log(json); // log the returned json to the console
+                console.log("success"); // another sanity check
+                $("#error_msg").prepend("<div class='note note-info'>" + json[0].message + "</div>");
+            },
+
+            // handle a non-successful response
+            error : function(xhr,errmsg,err) {
+                $('#error_msg').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+                    " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+                console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+            }
+        });
+    };
+
     // AJAX for posting
     function create_ticket() {
         console.log("create post is working!") // sanity check
         $.ajax({
-            url : "{% url 'ajax_create_ticket' %}", // the endpoint
+            url : "{% url 'create_ticket' ataccount.id %}", // the endpoint
             type : "POST", // http method
             data : {
               AllocationCodeID:$('#AllocationCodeID').val(),
@@ -318,8 +372,7 @@ $(document).ready(function () {
                 $('#Title').val('');
                 console.log(json); // log the returned json to the console
                 console.log("success"); // another sanity check
-                $("#error_msg").prepend("<div class='note note-info'>" + json[0].message + "</div>");
-                console.log(json[0].message);
+                $("#error_msg").prepend("<div class='note note-info'>" + json + "</div>");
             },
 
             // handle a non-successful response
@@ -330,13 +383,6 @@ $(document).ready(function () {
             }
         });
     };
-
-
-    function update_messages(messages){
-      $("#error_msg").html("");
-      $.each(messages, function (i, m) {
-                      $("#error_msg").append("<div class='alert alert-"+m.level+"''>"+m.message+"</div>");
-    })};
 </script>
 <script src="{% static 'js/main.js' %}"></script>
 {% endblock %}
