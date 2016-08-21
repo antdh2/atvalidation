@@ -299,6 +299,7 @@ $(document).ready(function () {
 
             // handle a successful response
             success : function(json) {
+                $('#error_msg').html('');
                 $('#AllocationCodeID').val('');
                 $('#AssignedResourceID').val('');
                 $('#AssignedResourceRoleID').val('');
