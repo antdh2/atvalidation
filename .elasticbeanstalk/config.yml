@@ -1,26 +1,26 @@
 branch-defaults:
   master:
-    environment: null
+    environment: autotaskvalidation-prod
     group_suffix: null
 global:
-  application_name: atvalidation
-  default_ec2_keyname: null
+  application_name: autotaskvalidation
+  default_ec2_keyname: autotaskvalidation
   default_platform: Python 3.4
   default_region: eu-west-1
   profile: eb-cli
   sc: git
 option_settings:
-  "aws:elasticbeanstalk:application:environment":
-    DJANGO_SETTINGS_MODULE: "autotask.settings"
-    PYTHONPATH: "$PYTHONPATH"
-  "aws:elasticbeanstalk:container:python":
-    WSGIPath: "autotask/wsgi.py"
+  aws:elasticbeanstalk:application:environment:
+    DJANGO_SETTINGS_MODULE: autotask.settings
+    PYTHONPATH: $PYTHONPATH
+  aws:elasticbeanstalk:container:python:
+    WSGIPath: autotask/wsgi.py
 packages:
   yum:
     postgresql93-devel: []
 container_commands:
   01_migrate:
-    command: "python manage.py migrate"
+    command: python manage.py migrate
     leader_only: true
-  02_collectstatic:
-  command: "python manage.py collectstatic --noinput"
+  02_collectstatic: null
+  command: python manage.py collectstatic --noinput
