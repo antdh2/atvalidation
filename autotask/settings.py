@@ -147,16 +147,39 @@ WSGI_APPLICATION = 'autotask.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': os.environ.get('DBENGINE'),
-        'NAME': os.environ.get('DBNAME'),
-        'USER': os.environ.get('DBUSER'),
-        'PASSWORD': os.environ.get('DBPASSWORD'),
-        'HOST': os.environ.get('DBHOST'),
-        'PORT': os.environ.get('DBPORT'),
+if 'RDS_DB_NAME' in os.environ:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': os.environ['RDS_DB_NAME'],
+            'USER': os.environ['RDS_USERNAME'],
+            'PASSWORD': os.environ['RDS_PASSWORD'],
+            'HOST': os.environ['RDS_HOSTNAME'],
+            'PORT': os.environ['RDS_PORT'],
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': os.environ.get('DBENGINE'),
+            'NAME': os.environ.get('DBNAME'),
+            'USER': os.environ.get('DBUSER'),
+            'PASSWORD': os.environ.get('DBPASSWORD'),
+            'HOST': os.environ.get('DBHOST'),
+            'PORT': os.environ.get('DBPORT'),
+        }
+    }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': os.environ.get('DBENGINE'),
+#         'NAME': os.environ.get('DBNAME'),
+#         'USER': os.environ.get('DBUSER'),
+#         'PASSWORD': os.environ.get('DBPASSWORD'),
+#         'HOST': os.environ.get('DBHOST'),
+#         'PORT': os.environ.get('DBPORT'),
+#     }
+# }
 
 ACCOUNT_EMAIL_UNIQUE = True
 
