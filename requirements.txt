@@ -28,7 +28,6 @@ jsonfield==1.0.3
 MarkupSafe==0.23
 pathspec==0.3.4
 poyo==0.4.0
-psycopg2==2.6.2
 python-dateutil==2.5.3
 pytz==2016.6.1
 PyYAML==3.11
