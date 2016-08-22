@@ -9,6 +9,11 @@
 /*
 * Simple style overrides or custom adds
 */
+.validatorlogin {
+    font-size: 18px;
+    vertical-align: middle;
+    margin-right: 5px;
+}
 
 .process_steps__step {
     height: inherit !important;

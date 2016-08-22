@@ -1,7 +1,6 @@
 from django.db import models
 from account.conf import settings
 
-
 # Create your models here.
 
 class Company(models.Model):
@@ -9,6 +8,9 @@ class Company(models.Model):
     password = models.CharField(max_length=254)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
 
 class Profile(models.Model):
     first_name = models.CharField(max_length=254)
@@ -26,6 +28,9 @@ class Profile(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        return self.first_name + " " +self.last_name
+
 class Picklist(models.Model):
     company = models.ForeignKey(Company, on_delete=models.CASCADE)
     key = models.CharField(max_length=254)
@@ -40,6 +45,9 @@ class ValidationGroup(models.Model):
     name = models.CharField(max_length=254)
     entity = models.ForeignKey(Entity, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return self.company
+
 class ValidationGroupRule(models.Model):
     entity = models.ForeignKey(Entity, on_delete=models.CASCADE)
     key = models.CharField(max_length=254)
@@ -49,6 +57,9 @@ class ValidationGroupRule(models.Model):
     validation_group = models.ForeignKey(ValidationGroup, on_delete=models.CASCADE)
     company = models.ForeignKey(Company)
 
+    def __str__(self):
+        return self.company + ": " + self.key + " " + self.operator + " " + self.value
+
 class Validation(models.Model):
     entity = models.ForeignKey(Entity, on_delete=models.CASCADE)
     key = models.CharField(max_length=254)
@@ -57,3 +68,6 @@ class Validation(models.Model):
     value = models.CharField(max_length=254)
     validation_group = models.ForeignKey(ValidationGroup, on_delete=models.CASCADE)
     mandatory = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.id + ": " + self.validation_group

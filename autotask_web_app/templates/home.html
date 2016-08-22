@@ -47,12 +47,21 @@
                 <!-- HEADER ACTION -->
                 <div class="header-links-container ">
                     <ul class="topnav navRight topnav">
+                      {% if request.user.profile %}
+                        <li class="editContent" style="outline: none; cursor: inherit;">
+                        <a href="{% url 'index' %}">
+                        <i class="fa fa-sign-in validatorlogin" aria-hidden="true"></i>
+                        <span class="hidden-xs">TO THE VALIDATOR</span>
+                        </a>
+                        </li>
+                      {% else %}
                         <li class="editContent" style="outline: none; cursor: inherit;">
                         <a href="#">
                         <i class="glyphicon glyphicon-log-in visible-xs xs-icon"></i>
                         <span class="hidden-xs">LOGIN</span>
                         </a>
                         </li>
+                      {% endif %}
                     </ul>
                 </div>
                 <!-- HEADER ACTION left -->
