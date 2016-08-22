@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 
 import os
+import dj_database_url
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -147,28 +148,20 @@ WSGI_APPLICATION = 'autotask.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
 
-if 'RDS_DB_NAME' in os.environ:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': os.environ['RDS_DB_NAME'],
-            'USER': os.environ['RDS_USERNAME'],
-            'PASSWORD': os.environ['RDS_PASSWORD'],
-            'HOST': os.environ['RDS_HOSTNAME'],
-            'PORT': os.environ['RDS_PORT'],
-        }
-    }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': os.environ.get('DBENGINE'),
-            'NAME': os.environ.get('DBNAME'),
-            'USER': os.environ.get('DBUSER'),
-            'PASSWORD': os.environ.get('DBPASSWORD'),
-            'HOST': os.environ.get('DBHOST'),
-            'PORT': os.environ.get('DBPORT'),
-        }
-    }
+DATABASES = {}
+DATABASES['default'] = dj_database_url.config('postgres://' + os.environ.get('DBNAME') + ':' + os.environ.get('DBPASSWORD') + '@' + os.environ.get('DBHOST') + ':' + os.environ.get('DBPORT') + '/' + os.environ.get('DBNAME'))
+
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': os.environ.get('DBENGINE'),
+#         'NAME': os.environ.get('DBNAME'),
+#         'USER': os.environ.get('DBUSER'),
+#         'PASSWORD': os.environ.get('DBPASSWORD'),
+#         'HOST': os.environ.get('DBHOST'),
+#         'PORT': os.environ.get('DBPORT'),
+#     }
+# }
 
 # DATABASES = {
 #     'default': {

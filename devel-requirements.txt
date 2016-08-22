@@ -40,3 +40,4 @@ texttable==0.8.4
 websocket-client==0.37.0
 whichcraft==0.4.0
 psycopg2==2.6.2
+dj-database-url==0.3.0 -e git+https://github.com/nwcell/psycopg2-windows.git@win64-py34#egg=psycopg2
