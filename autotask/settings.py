@@ -54,7 +54,7 @@ DJSTRIPE_PLANS = {
         "stripe_plan_id": "starter",
         "name": "Starter",
         "description": "Autotask input validation",
-        "price": 1000,  # £10.00
+        "price": 1000,
         "webprice": 10,
         "currency": "gbp",
         "interval": "month",
@@ -71,7 +71,7 @@ DJSTRIPE_PLANS = {
         "stripe_plan_id": "standard",
         "name": "Standard",
         "description": "Advanced and customisable backend input validation",
-        "price": 1500,  # £15.00
+        "price": 1500,
         "webprice": 15,
         "currency": "gbp",
         "interval": "month",
@@ -88,7 +88,7 @@ DJSTRIPE_PLANS = {
         "stripe_plan_id": "professional",
         "name": "Professional",
         "description": "Extended input validation",
-        "price": 2000,  # £20.00
+        "price": 2000,
         "webprice": 20,
         "currency": "gbp",
         "interval": "month",
@@ -148,20 +148,20 @@ WSGI_APPLICATION = 'autotask.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
 
-DATABASES = {}
-DATABASES['default'] = dj_database_url.config('postgres://' + os.environ.get('DBNAME') + ':' + os.environ.get('DBPASSWORD') + '@' + os.environ.get('DBHOST') + ':' + os.environ.get('DBPORT') + '/' + os.environ.get('DBNAME'))
+# DATABASES = {}
+# DATABASES['default'] = dj_database_url.config('postgres://' + os.environ.get('DBNAME') + ':' + os.environ.get('DBPASSWORD') + '@' + os.environ.get('DBHOST') + ':' + os.environ.get('DBPORT') + '/' + os.environ.get('DBNAME'))
 
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': os.environ.get('DBENGINE'),
-#         'NAME': os.environ.get('DBNAME'),
-#         'USER': os.environ.get('DBUSER'),
-#         'PASSWORD': os.environ.get('DBPASSWORD'),
-#         'HOST': os.environ.get('DBHOST'),
-#         'PORT': os.environ.get('DBPORT'),
-#     }
-# }
+DATABASES = {
+    'default': {
+        'ENGINE': os.environ.get('DBENGINE'),
+        'NAME': os.environ.get('DBNAME'),
+        'USER': os.environ.get('DBUSER'),
+        'PASSWORD': os.environ.get('DBPASSWORD'),
+        'HOST': os.environ.get('DBHOST'),
+        'PORT': os.environ.get('DBPORT'),
+    }
+}
 
 # DATABASES = {
 #     'default': {

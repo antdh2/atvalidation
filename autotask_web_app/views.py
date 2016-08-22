@@ -882,7 +882,7 @@ def get_account_types_picklist():
 ############################################################
 
 def create_picklist(request):
-    string = "create_picklist_module --username {} --password {} atvar-test.py".format(at_username, at_password)
+    string = "create_picklist_module --username {} --password {} atvar-{}.py".format(at_username, at_password, request.user.profile.company.name)
     os.system(string)
     messages.add_message(request, messages.SUCCESS, 'Creating picklist...this can take a while depending on the size of your database.')
     return render(request, 'account/profile.html', {})
