@@ -112,7 +112,7 @@
                                 }
                               </script>
                               <div class="tab-pane" id="tab_1_2">
-                                {% if user.profile.company.id == 1 %}
+                                {% if user.profile.company.name == "No Company" %}
                                 <a onclick="javascript:showJoin();" class="btn green">JOIN COMPANY</a>  <a onclick="javascript:showCreate();" class="btn green">CREATE COMPANY</a>
                                 <div id="joincompany" style="display: none">
                                   <hr>
@@ -161,7 +161,7 @@
                                   </form>
                                 </div>
                                 {% endif %}
-                                {% if user.profile.company.id > 1 %}
+                                {% if user.profile.company.name != "No Company" %}
                                   <h4>Your Company</h4>
                                   <p>You must leave this company before you can join or create one</p>
                                   <hr>

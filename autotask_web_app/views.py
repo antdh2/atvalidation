@@ -257,57 +257,50 @@ def delete_validation(request, id):
 @login_required(login_url='/account/login/')
 def profile(request, id):
     page = 'profile'
-    print(request)
-    print(id)
-    print(request.user.id)
-    print(request.user.profile.id)
-    print(int(request.user.id) == int(id))
     if int(request.user.id) != int(id):
-        # First we must connect to autotask using valid credentials
-        if request.method == "POST":
-            if request.POST.get('joincompany', False):
-                profile = Profile.objects.get(user_id=id)
-                company = Company.objects.get(id=request.POST['join-company-id'], name=request.POST['join-company-name'], password=request.POST['join-company-password'])
-                profile.company = company
-                profile.save()
-            if request.POST.get('leavecompany', False):
-                profile = Profile.objects.get(user_id=id)
-                # Set company to default "No Company"
-                company = Company.objects.get(id=1)
-                profile.company = company
-                profile.save()
-            if request.POST.get('createcompany', False):
-                company = Company.objects.create(name=request.POST['create-company-name'], password=request.POST['create-company-password'])
-                company.save()
-                profile = Profile.objects.get(user_id=id)
-                profile.company = company
-                profile.save()
-            if request.POST.get('editprofile', False):
-                profile = Profile.objects.get(user_id=id)
-                profile.first_name = request.POST['profile-firstname']
-                profile.last_name = request.POST['profile-lastname']
-                profile.about = request.POST['profile-about']
-                profile.save()
-                return render(request, 'account/profile.html', {"page": page, "profile": profile})
-            if request.POST.get('autotasklogin', False):
-                at = None
-                username = request.POST['username']
-                password = request.POST['password']
-                at = autotask_login_function(request, username, password)
-                user = request.POST['username'].split('@')
-                resource = get_resource_from_username(user[0])
-                profile = Profile.objects.get(user=request.user)
-                profile.atresource_id = resource.id
-                profile.save()
-                if at:
-                    messages.add_message(request, messages.SUCCESS, 'Successfully logged in. You may now proceed to create a picklist module.')
-                    return render(request, 'index.html', {"profile": profile, "page": page, "at": at})
-                else:
-                    return render(request, 'account/profile.html', {"page": page, "at": at, "profile": profile})
-            return render(request, 'account/profile.html', {"page": page})
-        else:
-            messages.add_message(request, messages.ERROR, "That's not your profile!.")
-            return redirect('index')
+        messages.add_message(request, messages.ERROR, "That's not your profile!.")
+        return redirect('index')
+    # First we must connect to autotask using valid credentials
+    if request.method == "POST":
+        if request.POST.get('joincompany', False):
+            profile = Profile.objects.get(user_id=id)
+            company = Company.objects.get(id=request.POST['join-company-id'], name=request.POST['join-company-name'], password=request.POST['join-company-password'])
+            profile.company = company
+            profile.save()
+        if request.POST.get('leavecompany', False):
+            profile = Profile.objects.get(user_id=id)
+            # Set company to default "No Company"
+            company = Company.objects.get(name="No Company")
+            profile.company = company
+            profile.save()
+        if request.POST.get('createcompany', False):
+            company = Company.objects.create(name=request.POST['create-company-name'], password=request.POST['create-company-password'])
+            company.save()
+            profile = Profile.objects.get(user_id=id)
+            profile.company = company
+            profile.save()
+        if request.POST.get('editprofile', False):
+            profile = Profile.objects.get(user_id=id)
+            profile.first_name = request.POST['profile-firstname']
+            profile.last_name = request.POST['profile-lastname']
+            profile.about = request.POST['profile-about']
+            profile.save()
+            return render(request, 'account/profile.html', {"page": page, "profile": profile})
+        if request.POST.get('autotasklogin', False):
+            at = None
+            username = request.POST['username']
+            password = request.POST['password']
+            at = autotask_login_function(request, username, password)
+            user = request.POST['username'].split('@')
+            resource = get_resource_from_username(user[0])
+            profile = Profile.objects.get(user=request.user)
+            profile.atresource_id = resource.id
+            profile.save()
+            if at:
+                messages.add_message(request, messages.SUCCESS, 'Successfully logged in. You may now proceed to create a picklist module.')
+                return render(request, 'index.html', {"profile": profile, "page": page, "at": at})
+            else:
+                return render(request, 'account/profile.html', {"page": page, "at": at, "profile": profile})
     return render(request, 'account/profile.html', {"page": page})
 
 @login_required(login_url='/account/login/')
@@ -898,29 +891,36 @@ def get_account_types_picklist():
 #
 ############################################################
 
-def create_picklist():
-    string = "create_picklist_module --username {} --password {} atvar-{}.py".format(at_username, at_password, request.user.profile.company.id)
+def create_picklist(request):
+    if request.user.profile.company == None or request.user.profile.company.name == "No Company" or request.user.profile.company.id == 1:
+        return False
+    string = "create_picklist_module --username {} --password {} atvar-{}.py".format(request.user.profile.autotask_username, request.user.profile.autotask_password, request.user.profile.company.id)
     os.system(string)
     messages.add_message(request, messages.SUCCESS, 'Creating picklist...this can take a while depending on the size of your database.')
-    return None
+    return True
 
 
 def create_picklist_database(request):
-    create_picklist()
-    # First we want to delete any existing picklist items
-    picklists = Picklist.objects.filter(company=request.user.profile.id)
-    for picklist in picklists:
-        picklist.delete()
-    file = open('atvar-{}.py'.format(request.user.profile.company.name), 'r')
-    for line in file.readlines():
-        # Split the line by whitespace giving ['Account_TerritoryID_Local', '=', '29682778']
-        line_array = line.split()
-        # Set the key to array index 0 to get left side of string, ie. Account_TerritoryID_Local
-        db_key = line_array[0]
-        # Now select third element in index 2, ie. 29682778
-        db_value = line_array[2]
-        Picklist.objects.create(company=request.user.profile.company, key=db_key, value=db_value)
-    messages.add_message(request, messages.SUCCESS, 'Added all picklist entities to database')
+    created = create_picklist(request)
+    print(created)
+    if created:
+        # First we want to delete any existing picklist items
+        picklists = Picklist.objects.filter(company=request.user.profile.id)
+        for picklist in picklists:
+            picklist.delete()
+        file = open('atvar-{}.py'.format(request.user.profile.company.id), 'r')
+        for line in file.readlines():
+            # Split the line by whitespace giving ['Account_TerritoryID_Local', '=', '29682778']
+            line_array = line.split()
+            # Set the key to array index 0 to get left side of string, ie. Account_TerritoryID_Local
+            db_key = line_array[0]
+            # Now select third element in index 2, ie. 29682778
+            db_value = line_array[2]
+            Picklist.objects.create(company=request.user.profile.company, key=db_key, value=db_value)
+        messages.add_message(request, messages.SUCCESS, 'Added all picklist entities to database')
+    else:
+        messages.add_message(request, messages.ERROR, 'You must create/join a company and have valid Autotask credentials before creating a picklist.')
+        return redirect('index')
     return redirect('profile', request.user.id)
 
 def create_picklist_dict(dict_name, index, regex):
