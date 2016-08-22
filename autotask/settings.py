@@ -21,7 +21,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = '%_*+go01-jr&(+)3rl1tt8j3d#11prafeqji=c4lo1o+c417rq'
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -45,9 +46,10 @@ INSTALLED_APPS = [
 
 # For Stripe
 SITE_ID = 1
-STRIPE_PUBLIC_KEY = os.environ.get("STRIPE_PUBLIC_KEY")
-STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
-DJSTRIPE_INVOICE_FROM_EMAIL = os.environ.get("DJSTRIPE_INVOICE_FROM_EMAIL")
+STRIPE_PUBLIC_KEY = "pk_test_XCZPToZADM1m3WEJOKPGYx70"
+STRIPE_SECRET_KEY = "sk_test_Dke5jy8Q1n4uNY88H8x0X7vE"
+DJSTRIPE_INVOICE_FROM_EMAIL = "info@studiointhecloud.co.uk"
+
 
 DJSTRIPE_PLANS = {
     "starter": {
@@ -154,12 +156,12 @@ WSGI_APPLICATION = 'autotask.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': os.environ.get('DBENGINE'),
-        'NAME': os.environ.get('DBNAME'),
-        'USER': os.environ.get('DBUSER'),
-        'PASSWORD': os.environ.get('DBPASSWORD'),
-        'HOST': os.environ.get('DBHOST'),
-        'PORT': os.environ.get('DBPORT'),
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'atvalidation',
+        'USER': 'postgres',
+        'PASSWORD': 'Mnschnaap1',
+        'HOST': 'localhost',
+        'PORT': '',
     }
 }
 
@@ -220,11 +222,11 @@ STATIC_URL = '/static/'
 # To server static files on heroku
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND')
-EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS')
-EMAIL_PORT = os.environ.get('EMAIL_PORT')
-EMAIL_HOST = os.environ.get('EMAIL_HOST')
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
-SERVER_EMAIL = os.environ.get('SERVER_EMAIL')
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL')
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST = 'smtp.office365.com'
+EMAIL_HOST_USER = 'info@studiointhecloud.co.uk'
+EMAIL_HOST_PASSWORD = ''
+SERVER_EMAIL = 'info@studiointhecloud.co.uk'
+DEFAULT_FROM_EMAIL = 'info@studiointhecloud.co.uk'
