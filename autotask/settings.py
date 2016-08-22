@@ -21,7 +21,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '%_*+go01-jr&(+)3rl1tt8j3d#11prafeqji=c4lo1o+c417rq'
+# SECRET_KEY = '%_*+go01-jr&(+)3rl1tt8j3d#11prafeqji=c4lo1o+c417rq'
+SECRET_KEY = os.environ['SECRET_KEY']
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -153,28 +154,28 @@ WSGI_APPLICATION = 'autotask.wsgi.application'
 # DATABASES = {}
 # DATABASES['default'] = dj_database_url.config('postgres://' + os.environ.get('DBNAME') + ':' + os.environ.get('DBPASSWORD') + '@' + os.environ.get('DBHOST') + ':' + os.environ.get('DBPORT') + '/' + os.environ.get('DBNAME'))
 
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'atvalidation',
-        'USER': 'postgres',
-        'PASSWORD': 'Mnschnaap1',
-        'HOST': 'localhost',
-        'PORT': '',
+if 'RDS_HOSTNAME' in os.environ:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': os.environ['RDS_DB_NAME'],
+            'USER': os.environ['RDS_USERNAME'],
+            'PASSWORD': os.environ['RDS_PASSWORD'],
+            'HOST': os.environ['RDS_HOSTNAME'],
+            'PORT': os.environ['RDS_PORT'],
+        }
     }
-}
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': os.environ.get('DBENGINE'),
-#         'NAME': os.environ.get('DBNAME'),
-#         'USER': os.environ.get('DBUSER'),
-#         'PASSWORD': os.environ.get('DBPASSWORD'),
-#         'HOST': os.environ.get('DBHOST'),
-#         'PORT': os.environ.get('DBPORT'),
-#     }
-# }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': 'atvalidation',
+            'USER': 'postgres',
+            'PASSWORD': 'Mnschnaap1',
+            'HOST': 'localhost',
+            'PORT': '',
+        }
+    }
 
 ACCOUNT_EMAIL_UNIQUE = True
 
@@ -222,11 +223,21 @@ STATIC_URL = '/static/'
 # To server static files on heroku
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_USE_TLS = True
-EMAIL_PORT = 587
-EMAIL_HOST = 'smtp.office365.com'
-EMAIL_HOST_USER = 'info@studiointhecloud.co.uk'
-EMAIL_HOST_PASSWORD = ''
-SERVER_EMAIL = 'info@studiointhecloud.co.uk'
-DEFAULT_FROM_EMAIL = 'info@studiointhecloud.co.uk'
+
+EMAIL_BACKEND = os.environ['EMAIL_BACKEND']
+EMAIL_USE_TLS = os.environ['EMAIL_USE_TLS']
+EMAIL_PORT = os.environ['EMAIL_PORT']
+EMAIL_HOST = os.environ['EMAIL_HOST']
+EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
+EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
+SERVER_EMAIL = os.environ['SERVER_EMAIL']
+DEFAULT_FROM_EMAIL = os.environ['DEFAULT_FROM_EMAIL']
+
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_USE_TLS = True
+# EMAIL_PORT = 587
+# EMAIL_HOST = 'smtp.office365.com'
+# EMAIL_HOST_USER = 'info@studiointhecloud.co.uk'
+# EMAIL_HOST_PASSWORD = ''
+# SERVER_EMAIL = 'info@studiointhecloud.co.uk'
+# DEFAULT_FROM_EMAIL = 'info@studiointhecloud.co.uk'
