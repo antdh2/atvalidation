@@ -8,6 +8,7 @@ chardet==2.3.0
 click==6.6
 colorama==0.3.7
 cookiecutter==1.4.0
+dj-database-url==0.3.0
 dj-stripe==0.8.0
 Django==1.9.7
 django-appconf==1.0.2
@@ -21,6 +22,7 @@ docopt==0.6.2
 docutils==0.12
 environ==1.0
 future==0.15.2
+gunicorn==19.6.0
 Jinja2==2.8
 jinja2-time==0.2.0
 jmespath==0.9.0
@@ -28,15 +30,18 @@ jsonfield==1.0.3
 MarkupSafe==0.23
 pathspec==0.3.4
 poyo==0.4.0
+psycopg2==2.6.2
+pycrypto==2.6.1
 python-dateutil==2.5.3
 pytz==2016.6.1
 PyYAML==3.11
 requests==2.9.1
 semantic-version==2.5.0
 six==1.10.0
+ssh==1.8.0
 stripe==1.37.0
 suds-jurko==0.6
 texttable==0.8.4
 websocket-client==0.37.0
 whichcraft==0.4.0
-psycopg2==2.6.2
+whitenoise==3.2.1
