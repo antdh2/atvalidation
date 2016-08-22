@@ -2,6 +2,12 @@ branch-defaults:
   master:
     environment: autotaskvalidation-prod
     group_suffix: null
+container_commands:
+  01_migrate:
+    command: python manage.py migrate
+    leader_only: true
+  02_collectstatic: null
+  command: python manage.py collectstatic --noinput
 global:
   application_name: autotaskvalidation
   default_ec2_keyname: autotaskvalidation
@@ -18,9 +24,3 @@ option_settings:
 packages:
   yum:
     postgresql93-devel: []
-container_commands:
-  01_migrate:
-    command: python manage.py migrate
-    leader_only: true
-  02_collectstatic: null
-  command: python manage.py collectstatic --noinput
