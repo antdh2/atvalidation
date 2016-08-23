@@ -178,7 +178,7 @@ else:
     }
 
 ACCOUNT_EMAIL_UNIQUE = True
-
+ACCOUNT_EMAIL_CONFIRMATION_REQUIRED = True
 
 # Password validation
 # https://docs.djangoproject.com/en/1.9/ref/settings/#auth-password-validators
