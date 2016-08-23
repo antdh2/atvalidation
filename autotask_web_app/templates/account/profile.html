@@ -163,7 +163,6 @@
                                 {% endif %}
                                 {% if user.profile.company.name != "No Company" %}
                                   <h4>Your Company</h4>
-                                  <p>You must leave this company before you can join or create one</p>
                                   <hr>
                                   <form role="form" method="POST" style="width: 35%">
                                     {% csrf_token %}
