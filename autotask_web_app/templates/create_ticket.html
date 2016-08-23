@@ -1,48 +1,6 @@
 {% extends 'base.html' %}
 {% load staticfiles %}
 {% block page %}
-<!-- <script>
-$(document).ready(function () {
-
-
-
-  $('#create-ticket').validate({ // initialize the plugin
-      rules: {
-          title: {
-              required: true,
-          },
-          description: {
-              required: true,
-          },
-          duedatetime: {
-            required: true,
-          },
-          estimatedhours: {
-            required: true,
-          }
-      },
-      messages: {
-        title: {
-          required: "You must enter a title",
-        },
-        description: {
-          required: "You must enter a description",
-        },
-        duedatetime: {
-          required: "You must enter a Due Date Time",
-        },
-        estimatedhours: {
-          required: "You must enter an estimated hours",
-        },
-      },
-      // submitHandler: function (form) { // for demo
-      //     alert('valid form submitted'); // for demo
-      //     return false; // for demo
-      // }
-  });
-
-});
-</script> -->
 <!-- BEGIN CONTENT -->
 <div class="page-content-wrapper">
   <!-- BEGIN CONTENT BODY -->
@@ -55,29 +13,6 @@ $(document).ready(function () {
         </div>
       </div>
       <div class="portlet-body">
-        <!-- {% if validation_groups %}
-        <div class="row">
-          <div class="col-md-8">
-            <form method="POST" name="apply_validation_form" action="{% url 'create_ticket' ataccount.id %}">
-              {% csrf_token %}
-              <input type="hidden" name="apply_validation" value="apply_validation">
-              <h6 class="card-header primary-color white-text">Apply validation group?</strong></h6>
-              <select class="form-control" name="validation-group-name"  onchange="apply_validation_form.submit();">
-                {% if create_ticket_dict.SelectedValidationGroup %}
-                  <option value="{{ create_ticket_dict.SelectedValidationGroup.id }}">{{ create_ticket_dict.SelectedValidationGroupName }} - Selected</option>
-                  <option data-divider="true"></option>
-                {% else %}
-                  <option value="">No Validation Group Selected</option>
-                {% endif %}
-                {% for validation_group in validation_groups %}
-                    <option value="{{ validation_group.id }}">{{ validation_group.name }}</option>
-                {% endfor %}
-              </select>
-              <hr>
-            </form>
-          </div>
-        </div>
-        {% endif %} -->
         <div class="row">
           <div class="col-md-5">
             <h6 class="card-header primary-color white-text">TICKET INFORMATION</strong></h6>

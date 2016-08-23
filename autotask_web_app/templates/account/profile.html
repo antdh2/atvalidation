@@ -248,7 +248,8 @@
                               <!-- END PERSONAL INFO TAB -->
                               <!-- CHANGE AVATAR TAB -->
                               <div class="tab-pane" id="tab_2_2">
-                                <a class="btn green" href="{% url 'create_picklist_database' %}">Create Picklist Module</a>
+                                <a id="create-picklist-module" class="btn green" href="{% url 'create_picklist_database' %}">Create Picklist Module</a>
+                                <div style="margin-top: 25px" id="picklist-messages"></div>
                               </div>
                               <!-- END CHANGE AVATAR TAB -->
                           </div>
@@ -264,9 +265,41 @@
       </div>
       <!-- END CONTENT BODY -->
       </div>
-      <!-- END CONTENT -->
 
-      <!-- END QUICK SIDEBAR -->
-      <!-- END CONTAINER -->
+      <script type="text/javascript">
+      $(document).ready(function() {
+        $("#create-picklist-module").click(function(e) {
+          e.preventDefault();
+          console.log("lol")
+          create_picklist();
+        });
+      });
+
+
+          // AJAX for submitting the picklist
+          function create_picklist() {
+              console.log("check post is working!") // sanity check
+              $("#picklist-messages").append("<div class='note note-info'>Creating picklist module...<strong>DO NOT leave or refresh this page!</strong></div>");
+              $.ajax({
+                  url : "{% url 'ajax_create_picklist' %}", // the endpoint
+                  type : "POST", // http method
+                  data : {},
+
+                  // handle a successful response
+                  success : function(json) {
+                      console.log(json); // log the returned json to the console
+                      $("#picklist-messages").append(json[0].message);
+                  },
+
+                  // handle a non-successful response
+                  error : function(xhr,errmsg,err) {
+                      $('#error_msg').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+                          " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+                      console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+                  }
+              });
+          };
+      </script>
+      <script src="{% static 'js/main.js' %}"></script>
 
 {% endblock %}

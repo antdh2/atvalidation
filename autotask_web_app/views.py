@@ -892,36 +892,63 @@ def get_account_types_picklist():
 ############################################################
 
 def create_picklist(request):
+    picklist_messages = []
     if request.user.profile.company == None or request.user.profile.company.name == "No Company" or request.user.profile.company.id == 1:
         return False
     string = "create_picklist_module --username {} --password {} atvar-{}.py".format(request.user.profile.autotask_username, request.user.profile.autotask_password, request.user.profile.company.id)
+    picklist_messages.append("<div class='note note-info'>Creating picklist...this can take a while depending on the size of your database.</div>")
     os.system(string)
-    messages.add_message(request, messages.SUCCESS, 'Creating picklist...this can take a while depending on the size of your database.')
+    picklist_messages.append("<div class='note note-info'>Created picklist module for company {} </div>".format(request.user.profile.company.name))
     return True
 
 
 def create_picklist_database(request):
-    created = create_picklist(request)
-    print(created)
-    if created:
-        # First we want to delete any existing picklist items
-        picklists = Picklist.objects.filter(company=request.user.profile.id)
-        for picklist in picklists:
-            picklist.delete()
-        file = open('atvar-{}.py'.format(request.user.profile.company.id), 'r')
-        for line in file.readlines():
-            # Split the line by whitespace giving ['Account_TerritoryID_Local', '=', '29682778']
-            line_array = line.split()
-            # Set the key to array index 0 to get left side of string, ie. Account_TerritoryID_Local
-            db_key = line_array[0]
-            # Now select third element in index 2, ie. 29682778
-            db_value = line_array[2]
-            Picklist.objects.create(company=request.user.profile.company, key=db_key, value=db_value)
-        messages.add_message(request, messages.SUCCESS, 'Added all picklist entities to database')
-    else:
+    picklist_messages = []
+    created = False
+    if request.user.profile.company == None or request.user.profile.company.name == "No Company" or request.user.profile.company.id == 1:
         messages.add_message(request, messages.ERROR, 'You must create/join a company and have valid Autotask credentials before creating a picklist.')
         return redirect('index')
-    return redirect('profile', request.user.id)
+    # First we must delete any existing picklists or they will be added to exponentially
+    picklist_messages.append("<div class='note note-info'>Deleting existing picklist database...</div>")
+    picklists = Picklist.objects.filter(company=request.user.profile.id)
+    for picklist in picklists:
+        picklist.delete()
+    # string = "create_picklist_module --username {} --password {} atvar-{}.py".format(request.user.profile.autotask_username, request.user.profile.autotask_password, request.user.profile.company.id)
+    picklist_messages.append("<div class='note note-info'>Creating picklist...this can take a while depending on the size of your database.</div>")
+    # os.system(string)
+    picklist_messages.append("<div class='note note-info'>Created picklist module for company {} </div>".format(request.user.profile.company.name))
+    file = open('atvar-{}.py'.format(request.user.profile.company.id), 'r')
+    picklist_messages.append("<div class='note note-info'>Writing new picklist entities into database...</div>")
+    for line in file.readlines():
+        # Split the line by whitespace giving ['Account_TerritoryID_Local', '=', '29682778']
+        line_array = line.split()
+        # Set the key to array index 0 to get left side of string, ie. Account_TerritoryID_Local
+        db_key = line_array[0]
+        # Now select third element in index 2, ie. 29682778
+        db_value = line_array[2]
+        Picklist.objects.create(company=request.user.profile.company, key=db_key, value=db_value)
+    picklist_messages.append("<div class='note note-success'>Added all picklist entities to database</div>")
+    cleaned_picklist_message = ''
+    for msg in picklist_messages:
+        cleaned_picklist_message += msg
+    messages.add_message(request, messages.WARNING, mark_safe(cleaned_picklist_message))
+    # return redirect('profile', request.user.id)
+
+
+def ajax_create_picklist(request):
+    if request.method == "POST":
+        create_picklist_database(request)
+        django_messages = []
+        for message in messages.get_messages(request):
+            django_messages.append({
+                "level": message.level_tag,
+                "message": message.message,
+                "extra_tags": message.tags,
+        })
+        return HttpResponse(json.dumps(django_messages), content_type="application/json")
+    else:
+        return HttpResponse(json.dumps({"nothing to see": "this isn't happening"}), content_type="application/json")
+
 
 def create_picklist_dict(dict_name, index, regex):
     file = open('atvar.py', 'r')
