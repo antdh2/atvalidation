@@ -1,37 +1,11 @@
 branch-defaults:
   master:
-    environment: autotaskvalidation-dev
+    environment: null
+    group_suffix: null
 global:
-  application_name: autotaskvalidation
+  application_name: atvalidation
   default_ec2_keyname: autotaskvalidation
-  default_platform: 64bit Amazon Linux 2016.03 v2.1.3 running Python 3.4
+  default_platform: Python 3.4
   default_region: eu-west-1
   profile: eb-cli
   sc: git
-packages:
-  yum:
-    postgresql93: []
-    postgresql93-devel: []
-    postgresql-devel: []
-    libpq-dev: []
-container_commands:
-  setenvironmentvars:
-    command: "eb setenv DEFAULT_FROM_EMAIL=info@studiointhecloud.co.uk"
-    command: "eb setenv EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend"
-    command: "eb setenv EMAIL_HOST=smtp.office365.com"
-    command: "eb setenv EMAIL_HOST_PASSWORD=Mnschnaap1!"
-    command: "eb setenv EMAIL_HOST_USER=info@studiointhecloud.co.uk"
-    command: "eb setenv EMAIL_PORT=587"
-    command: "eb setenv EMAIL_USE_TLS=TRUE"
-    command: "eb setenv SERVER_EMAIL=info@studiointhecloud.co.uk"
-    command: "eb setenv RDS_DB_NAME=ebdb"
-    command: "eb setenv RDS_HOSTNAME=aa1lig8af53vwbc.czfdqpop0u9j.eu-west-1.rds.amazonaws.com"
-    command: "eb setenv RDS_PORT=5432"
-    command: "eb setenv RDS_USERNAME=postgres"
-    command: "eb setenv SECRET_KEY=''%_*+go01-jr&(+)3rl1tt8j3d#11prafeqji=c4lo1o+c417rq'"
-  01pippsycopg2:
-    command: "sudo pip install psycopg2"
-    leader_only: true
-  02migrate:
-    command: "python manage.py migrate"
-    leader_only: true
