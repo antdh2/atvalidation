@@ -37,6 +37,7 @@ input#id_email {
 
 #id_password {
   margin-bottom: 15px;
+  margin-right: 50px;
 }
 
 input#id_remember {
