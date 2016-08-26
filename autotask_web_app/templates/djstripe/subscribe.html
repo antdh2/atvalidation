@@ -33,14 +33,14 @@
         <div class="row">
             {% for plan in PLAN_LIST %}
               {% with plan_count=PLAN_LIST|length %}
-                <div class="col-xs-3 col-xs-offset-4">
+                <div class="col-xs-4">
               {% endwith %}
                     {% if customer.current_subscription.plan == plan.plan and customer.current_subscription.status != CurrentSubscription.STATUS_CANCELLED %}
                     <div class="pricing-content-2">
                         <div class="pricing-table-container">
                         <div class="price-column-container border-left border-top border-right">
                             <div class="price-table-head price-1">
-                                <h2 class="uppercase {% if plan.name == 'Bronze' %} bg-blue {% elif plan.name == 'Silver' %} bg-blue-steel {% elif plan.name == 'Gold' %} bg-green-jungle {% endif %} font-grey-cararra opt-pricing-5">{{ plan.name }}</h2>
+                                <h2 class="uppercase {% if plan.name == 'Starter' %} bg-blue {% elif plan.name == 'Standard' %} bg-blue-steel {% elif plan.name == 'Professional' %} bg-green-jungle {% else %} bg-green-jungle {% endif %} font-grey-cararra opt-pricing-5">{{ plan.name }}</h2>
                             </div>
                             <div class="price-table-pricing">
                                 <h3>
@@ -88,6 +88,14 @@
                                           <div class="col-xs-9 text-left uppercase">{{ plan.feature5 }}</div>
                                       </div>
                                     {% endif %}
+                                    {% if plan.feature6 %}
+                                      <div class="row no-margin">
+                                          <div class="col-xs-3 text-right">
+                                              <i class="{{ plan.feature6icon }}"></i>
+                                          </div>
+                                          <div class="col-xs-9 text-left uppercase">{{ plan.feature6 }}</div>
+                                      </div>
+                                    {% endif %}
                             </div>
                             <div class="price-table-footer">
                               <a class="btn grey-salsa btn-outline sbold uppercase disabled" href="{% url 'djstripe:confirm' plan=plan.plan %}" role="button"> CURRENT PLAN </a>
@@ -99,7 +107,7 @@
                         <div class="pricing-table-container">
                         <div class="price-column-container border-left border-top border-right">
                             <div class="price-table-head price-1">
-                                <h2 class="uppercase {% if plan.name == 'Bronze' %} bg-blue {% elif plan.name == 'Silver' %} bg-blue-steel {% elif plan.name == 'Gold' %} bg-green-jungle {% endif %} font-grey-cararra opt-pricing-5">{{ plan.name }}</h2>
+                              <h2 class="uppercase {% if plan.name == 'Starter' %} bg-yellow-gold {% elif plan.name == 'Standard' %} bg-blue-steel {% elif plan.name == 'Professional' %} bg-green-jungle {% else %} bg-green-jungle {% endif %} font-grey-cararra opt-pricing-5">{{ plan.name }}</h2>
                             </div>
                             <div class="price-table-pricing">
                                 <h3>
@@ -145,6 +153,14 @@
                                             <i class="{{ plan.feature5icon }}"></i>
                                           </div>
                                           <div class="col-xs-9 text-left uppercase">{{ plan.feature5 }}</div>
+                                      </div>
+                                    {% endif %}
+                                    {% if plan.feature6 %}
+                                      <div class="row no-margin">
+                                          <div class="col-xs-3 text-right">
+                                              <i class="{{ plan.feature6icon }}"></i>
+                                          </div>
+                                          <div class="col-xs-9 text-left uppercase">{{ plan.feature6 }}</div>
                                       </div>
                                     {% endif %}
                             </div>
