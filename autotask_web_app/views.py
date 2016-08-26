@@ -906,16 +906,16 @@ def create_picklist_database(request):
     picklist_messages = []
     created = False
     if request.user.profile.company == None or request.user.profile.company.name == "No Company" or request.user.profile.company.id == 1:
-        messages.add_message(request, messages.ERROR, 'You must create/join a company and have valid Autotask credentials before creating a picklist.')
+        messages.add_message(request, messages.ERROR, '<div class="note note-danger">You must create/join a company and have valid Autotask credentials before creating a picklist.</div>')
         return redirect('index')
     # First we must delete any existing picklists or they will be added to exponentially
     picklist_messages.append("<div class='note note-info'>Deleting existing picklist database...</div>")
     picklists = Picklist.objects.filter(company=request.user.profile.id)
     for picklist in picklists:
         picklist.delete()
-    # string = "create_picklist_module --username {} --password {} atvar-{}.py".format(request.user.profile.autotask_username, request.user.profile.autotask_password, request.user.profile.company.id)
+    string = "create_picklist_module --username {} --password {} atvar-{}.py".format(request.user.profile.autotask_username, request.user.profile.autotask_password, request.user.profile.company.id)
     picklist_messages.append("<div class='note note-info'>Creating picklist...this can take a while depending on the size of your database.</div>")
-    # os.system(string)
+    os.system(string)
     picklist_messages.append("<div class='note note-info'>Created picklist module for company {} </div>".format(request.user.profile.company.name))
     file = open('atvar-{}.py'.format(request.user.profile.company.id), 'r')
     picklist_messages.append("<div class='note note-info'>Writing new picklist entities into database...</div>")
