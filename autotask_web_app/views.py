@@ -62,7 +62,10 @@ def generate_entities(request, id):
     #     e.delete()
     # First we must know if this user has a subscription equal to starter package
     if request.user.customer.current_subscription.plan == 'starter':
+        # First we must delete all entites to avoid giving them option to use them if downgraded plan
         entities_in_db = Entity.objects.filter(profile=request.user.profile)
+        for e in entities_in_db:
+            e.delete()
         if not entities_in_db:
             for key, value in STARTER_ENTITIES.items():
                 print(key + ": " + value)
@@ -79,7 +82,10 @@ def generate_entities(request, id):
                     else:
                         Entity.objects.create(name=key, profile=request.user.profile)
     if request.user.customer.current_subscription.plan == 'standard':
+        # First we must delete all entites to avoid giving them option to use them if downgraded plan
         entities_in_db = Entity.objects.filter(profile=request.user.profile)
+        for e in entities_in_db:
+            e.delete()
         if not entities_in_db:
             for key, value in STANDARD_ENTITIES.items():
                 print(key + ": " + value)
@@ -97,7 +103,10 @@ def generate_entities(request, id):
                     else:
                         Entity.objects.create(name=key, profile=request.user.profile)
     if request.user.customer.current_subscription.plan == 'professional':
+        # First we must delete all entites to avoid giving them option to use them if downgraded plan
         entities_in_db = Entity.objects.filter(profile=request.user.profile)
+        for e in entities_in_db:
+            e.delete()
         if not entities_in_db:
             for key, value in PROFESSIONAL_ENTITIES.items():
                 print(key + ": " + value)
@@ -121,6 +130,7 @@ def home(request):
 input_validation_dict = {}
 @subscription_payment_required
 def input_validation(request, id):
+    generate_entities(request, id)
     page = 'validation'
     step = 1
     if request.user:

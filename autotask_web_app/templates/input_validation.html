@@ -61,7 +61,9 @@
                                           </div>
                                           <select name="entitytype" class="form-control">
                                             {% for entity in entitytypes %}
+                                              {% if entity.profile.id == user.profile.id %}
                                                 <option  value="{{ entity.name }}">{{ entity.name }}</option>
+                                              {% endif %}
                                             {% endfor %}
                                           </select>
                                           <br>
