@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.core.files import File
 from django.utils.safestring import mark_safe
+from django.contrib.auth.hashers  import make_password, check_password
 
 import time
 import datetime
