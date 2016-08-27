@@ -295,17 +295,8 @@ def profile(request, id):
 
 @login_required(login_url='/account/login/')
 def index(request):
-    try:
-        page = 'index'
-        accounts = None
-        at = None
-        if request.user:
-            at = autotask_login_function(request, request.user.profile.autotask_username, request.user.profile.autotask_password)
-
-        return render(request, 'index.html', {"accounts": accounts, "page": page, "at": at})
-    except AttributeError:
-        messages.add_message(request, messages.ERROR, 'No connection with Autotask. Please ensure your Autotask credentials are entered in your profile page.')
-        return render(request, 'index.html', {"at": at, })
+    page = 'index'
+    return render(request, 'index.html', {"page": page})
 
 
 def ajax_create_ticket(request):

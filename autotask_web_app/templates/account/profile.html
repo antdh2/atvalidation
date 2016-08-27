@@ -56,134 +56,133 @@
                             <!-- END BEGIN PROFILE SIDEBAR -->
       <!-- BEGIN PROFILE CONTENT -->
       <div class="profile-content">
-          <div class="row">
-              <div class="col-md-12">
-                  <div class="portlet light ">
-                      <div class="portlet-title tabbable-line">
-                          <div class="caption caption-md">
-                              <i class="icon-globe theme-font hide"></i>
-                              <span class="caption-subject font-blue-madison bold uppercase">Profile Account</span>
-                          </div>
-                          <ul class="nav nav-tabs">
-                            <li class="active">
-                                <a href="#tab_1_1" data-toggle="tab">Personal</a>
-                            </li>
-                            <li class="">
-                                <a href="#tab_1_2" data-toggle="tab">Company</a>
-                            </li>
-                          </ul>
+      <div class="row">
+          <div class="col-md-12">
+              <div class="portlet light ">
+                  <div class="portlet-title tabbable-line">
+                      <div class="caption caption-md">
+                          <i class="icon-globe theme-font hide"></i>
+                          <span class="caption-subject font-blue-madison bold uppercase">Profile Account</span>
                       </div>
-                      <div class="portlet-body">
-                          <div class="tab-content">
-                              <!-- PERSONAL INFO TAB -->
-                              <div class="tab-pane active" id="tab_1_1">
-                                  <form role="form" method="POST">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="editprofile" value="editprofile">
-                                      <div class="form-group">
-                                          <label class="control-label">First Name</label>
-                                          <input name="profile-firstname" type="text" placeholder="John" class="form-control" value="{{ user.profile.first_name }}"/> </div>
-                                      <div class="form-group">
-                                          <label class="control-label">Last Name</label>
-                                          <input name="profile-lastname" type="text" placeholder="Doe" class="form-control" value="{{ user.profile.last_name }}" /> </div>
-                                      <div class="form-group">
-                                          <label class="control-label">About</label>
-                                          <textarea name="profile-about" class="form-control" rows="3" placeholder="Enter a short description of yourself..." value="{{ user.profile.about }}"></textarea>
-                                      </div>
-                                      <div class="margiv-top-10">
-                                        <input type="submit" class="btn green" />
-                                      </div>
-                                  </form>
-                              </div>
-                              <!-- END PERSONAL INFO TAB -->
-                              <!-- CHANGE AVATAR TAB -->
-                              <script type="text/javascript">
-                                function showJoin() {
-                                    div = document.getElementById('joincompany');
-                                    div2 = document.getElementById('createcompany');
-                                    div.style.display = "block";
-                                    div2.style.display = "none";
-                                }
-                                function showCreate() {
-                                  div = document.getElementById('createcompany');
-                                  div2 = document.getElementById('joincompany');
-                                  div.style.display = "block";
-                                  div2.style.display = "none";
-                                }
-                              </script>
-                              <div class="tab-pane" id="tab_1_2">
-                                {% if user.profile.company.name == "No Company" %}
-                                <a onclick="javascript:showJoin();" class="btn green">JOIN COMPANY</a>  <a onclick="javascript:showCreate();" class="btn green">CREATE COMPANY</a>
-                                <div id="joincompany" style="display: none">
-                                  <hr>
-                                  <h4>You are not part of a company</h4>
-                                  <p>Join your company by entering the name, id and password below</p>
-                                  <hr>
-                                  <form role="form" method="POST" style="width: 35%">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="joincompany" value="joincompany">
-                                      <div class="form-group">
-                                        <label class="control-label">Company Name</label>
-                                        <input name="join-company-name" type="text" placeholder="Company Name" class="form-control"/>
-                                      </div>
-                                      <div class="form-group">
-                                        <label class="control-label">Company ID</label>
-                                        <input name="join-company-id" type="text" placeholder="Company ID" class="form-control"/>
-                                      </div>
-                                      <div class="form-group">
-                                        <label class="control-label">Company Password</label>
-                                        <input name="join-company-password" type="password" placeholder="Password" class="form-control" value=""/>
-                                      </div>
-                                      <div class="margiv-top-10">
-                                        <input type="submit" class="btn green" />
-                                      </div>
-                                  </form>
-                                </div>
-                                <div id="createcompany" style="display: none">
-                                  <hr>
-                                  <h4>Create New Company</h4>
-                                  <p>Create a new company and hand out the Name, ID and Password to other users</p>
-                                  <hr>
-                                  <form role="form" method="POST" style="width: 35%">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="createcompany" value="createcompany">
-                                      <div class="form-group">
-                                          <label class="control-label">Company Name</label>
-                                          <input name="create-company-name" type="text" placeholder="Enter a Company Name" class="form-control"/>
-                                      </div>
-                                      <div class="form-group">
-                                          <label class="control-label">Company Password</label>
-                                          <input name="create-company-password" type="password" placeholder="Enter a Company Password" class="form-control"/>
-                                      </div>
-                                      <div class="margiv-top-10">
-                                        <input type="submit" class="btn green" />
-                                      </div>
-                                  </form>
-                                </div>
-                                {% endif %}
-                                {% if user.profile.company.name != "No Company" %}
-                                  <h4>Your Company</h4>
-                                  <hr>
-                                  <form role="form" method="POST" style="width: 35%">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="leavecompany" value="leavecompany">
-                                      <div class="form-group">
-                                        <label class="control-label">Company Name</label>
-                                        <input name="company-name" type="text" class="form-control" value="{{ user.profile.company.name }}"/>
-                                      </div>
-                                      <div class="form-group">
-                                        <label class="control-label">Company ID</label>
-                                        <input name="company-id" type="text" class="form-control" value="{{ user.profile.company.id }}"/>
-                                      </div>
-                                      <div class="margiv-top-10">
-                                        <input type="submit" class="btn green" value="LEAVE COMPANY">
-                                      </div>
-                                  </form>
-                                {% endif %}
-                              </div>
-
-                              <!-- END CHANGE AVATAR TAB -->
+                      <ul class="nav nav-tabs">
+                        <li class="active">
+                            <a href="#tab_1_1" data-toggle="tab">Personal</a>
+                        </li>
+                        <li class="">
+                            <a href="#tab_1_2" data-toggle="tab">Company</a>
+                        </li>
+                      </ul>
+                  </div>
+                  <div class="portlet-body">
+                      <div class="tab-content">
+                          <!-- PERSONAL INFO TAB -->
+                          <div class="tab-pane active" id="tab_1_1">
+                              <form role="form" method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="editprofile" value="editprofile">
+                                  <div class="form-group">
+                                      <label class="control-label">First Name</label>
+                                      <input name="profile-firstname" type="text" placeholder="John" class="form-control" value="{{ user.profile.first_name }}"/> </div>
+                                  <div class="form-group">
+                                      <label class="control-label">Last Name</label>
+                                      <input name="profile-lastname" type="text" placeholder="Doe" class="form-control" value="{{ user.profile.last_name }}" /> </div>
+                                  <div class="form-group">
+                                      <label class="control-label">About</label>
+                                      <textarea name="profile-about" class="form-control" rows="3" placeholder="Enter a short description of yourself..." value="{{ user.profile.about }}"></textarea>
+                                  </div>
+                                  <div class="margiv-top-10">
+                                    <input type="submit" class="btn green" />
+                                  </div>
+                              </form>
                           </div>
+                          <!-- END PERSONAL INFO TAB -->
+                          <!-- CHANGE AVATAR TAB -->
+                          <script type="text/javascript">
+                            function showJoin() {
+                                div = document.getElementById('joincompany');
+                                div2 = document.getElementById('createcompany');
+                                div.style.display = "block";
+                                div2.style.display = "none";
+                            }
+                            function showCreate() {
+                              div = document.getElementById('createcompany');
+                              div2 = document.getElementById('joincompany');
+                              div.style.display = "block";
+                              div2.style.display = "none";
+                            }
+                          </script>
+                          <div class="tab-pane" id="tab_1_2">
+                            {% if user.profile.company.name == "No Company" %}
+                            <a onclick="javascript:showJoin();" class="btn green">JOIN COMPANY</a>  <a onclick="javascript:showCreate();" class="btn green">CREATE COMPANY</a>
+                            <div id="joincompany" style="display: none">
+                              <hr>
+                              <h4>You are not part of a company</h4>
+                              <p>Join your company by entering the name, id and password below</p>
+                              <hr>
+                              <form role="form" method="POST" style="width: 35%">
+                                {% csrf_token %}
+                                <input type="hidden" name="joincompany" value="joincompany">
+                                  <div class="form-group">
+                                    <label class="control-label">Company Name</label>
+                                    <input name="join-company-name" type="text" placeholder="Company Name" class="form-control"/>
+                                  </div>
+                                  <div class="form-group">
+                                    <label class="control-label">Company ID</label>
+                                    <input name="join-company-id" type="text" placeholder="Company ID" class="form-control"/>
+                                  </div>
+                                  <div class="form-group">
+                                    <label class="control-label">Company Password</label>
+                                    <input name="join-company-password" type="password" placeholder="Password" class="form-control" value=""/>
+                                  </div>
+                                  <div class="margiv-top-10">
+                                    <input type="submit" class="btn green" />
+                                  </div>
+                              </form>
+                            </div>
+                            <div id="createcompany" style="display: none">
+                              <hr>
+                              <h4>Create New Company</h4>
+                              <p>Create a new company and hand out the Name, ID and Password to other users</p>
+                              <hr>
+                              <form role="form" method="POST" style="width: 35%">
+                                {% csrf_token %}
+                                <input type="hidden" name="createcompany" value="createcompany">
+                                  <div class="form-group">
+                                      <label class="control-label">Company Name</label>
+                                      <input name="create-company-name" type="text" placeholder="Enter a Company Name" class="form-control"/>
+                                  </div>
+                                  <div class="form-group">
+                                      <label class="control-label">Company Password</label>
+                                      <input name="create-company-password" type="password" placeholder="Enter a Company Password" class="form-control"/>
+                                  </div>
+                                  <div class="margiv-top-10">
+                                    <input type="submit" class="btn green" />
+                                  </div>
+                              </form>
+                            </div>
+                            {% endif %}
+                            {% if user.profile.company.name != "No Company" %}
+                              <h4>Your Company</h4>
+                              <hr>
+                              <form role="form" method="POST" style="width: 35%">
+                                {% csrf_token %}
+                                <input type="hidden" name="leavecompany" value="leavecompany">
+                                  <div class="form-group">
+                                    <label class="control-label">Company Name</label>
+                                    <input name="company-name" type="text" class="form-control" value="{{ user.profile.company.name }}"/>
+                                  </div>
+                                  <div class="form-group">
+                                    <label class="control-label">Company ID</label>
+                                    <input name="company-id" type="text" class="form-control" value="{{ user.profile.company.id }}"/>
+                                  </div>
+                                  <div class="margiv-top-10">
+                                    <input type="submit" class="btn green" value="LEAVE COMPANY">
+                                  </div>
+                              </form>
+                            {% endif %}
+                          </div>
+
+                          <!-- END CHANGE AVATAR TAB -->
                       </div>
                   </div>
               </div>
@@ -191,7 +190,8 @@
       </div>
       <!-- END PROFILE CONTENT -->
       <!-- BEGIN AUTOTASK CONTENT -->
-      {% if user.profile.company.name == "No Company "%}
+      {% if user.profile.company.name == 'No Company' %}
+        &nbsp;
       {% else %}
       <div class="profile-content">
           <div class="row">
