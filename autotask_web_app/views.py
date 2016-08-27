@@ -126,6 +126,7 @@ def input_validation(request, id):
         at = autotask_login_function(request, request.user.profile.autotask_username, request.user.profile.autotask_password)
     try:
         existing_validation_groups = ValidationGroup.objects.filter(company=request.user.profile.company)
+        existing_validation_group_rules = ValidationGroupRule.objects.filter(company=request.user.profile.company)
         existing_validations = []
         validations = Validation.objects.all()
         for v in validations:
@@ -153,38 +154,16 @@ def input_validation(request, id):
             entity_attributes = at.new(input_validation_dict['EntityName'])
             return redirect('edit_validation_group', id, input_validation_dict['ValidationGroupId'])
             # return render(request, 'input_validation.html', {"page": page, "entitytypes": entitytypes, "OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "values": values, "selected_key": selected_key, "existing_validations": existing_validations, "input_validation_dict": input_validation_dict, "existing_validation_groups": existing_validation_groups})
-        if request.POST.get('step2-keyselect', False):
-            step = 3
-            key = request.POST['key']
-            selected_key = key
-            values = Picklist.objects.filter(company=request.user.profile.company, key__icontains=input_validation_dict['EntityName'] + "_" + key)
-            return render(request, 'input_validation.html', {"page": page, "entitytypes": entitytypes, "OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "values": values, "selected_key": selected_key, "existing_validations": existing_validations, "input_validation_dict": input_validation_dict, "existing_validation_groups": existing_validation_groups})
-        if request.POST.get('step2', False):
-            step = 3
-            key = request.POST['selected_key']
-            value = request.POST['value']
-            operator = request.POST['operator']
-            # We have to find the picklist from atvar to associate the right number to the validation
-            # Validation object "value" should match the result of Picklist "key". ie. (atvar.)Ticket_Status_New on Validation should equal 1 on Picklist
-            try:
-                picklist_object = Picklist.objects.get(key=value)
-                picklist = picklist_object.value
-            except:
-                picklist = -100
-            entity = Entity.objects.get(name="Ticket")
-            validation = Validation.objects.create(key=key, value=value, operator=operator, entity=entity, picklist_number=picklist, validation_group=input_validation_dict['ValidationGroup'])
-            return render(request, 'input_validation.html', {"page": page, "entitytypes": entitytypes, "OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "existing_validations": existing_validations, "input_validation_dict": input_validation_dict, "existing_validation_groups": existing_validation_groups})
-    return render(request, 'input_validation.html', {"page": page, "entitytypes": entitytypes, "OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "existing_validations": existing_validations, "input_validation_dict": input_validation_dict, "existing_validation_groups": existing_validation_groups})
+    return render(request, 'input_validation.html', {"existing_validation_group_rules": existing_validation_group_rules, "page": page, "entitytypes": entitytypes, "OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "existing_validations": existing_validations, "input_validation_dict": input_validation_dict, "existing_validation_groups": existing_validation_groups})
 
 def edit_validation_group(request, id, validation_group_id):
     if request.user:
         at = autotask_login_function(request, request.user.profile.autotask_username, request.user.profile.autotask_password)
-    step = 1
     validation_group = ValidationGroup.objects.get(id=validation_group_id)
     existing_validations = Validation.objects.filter(validation_group=validation_group_id)
     entity_attributes = at.new(validation_group.entity.name)
     try:
-        validation_group_rule = ValidationGroupRule.objects.get(validation_group=validation_group_id)
+        validation_group_rule = ValidationGroupRule.objects.get(validation_group=validation_group)
     except:
         validation_group_rule = None
     values = None
@@ -197,7 +176,6 @@ def edit_validation_group(request, id, validation_group_id):
             values = Picklist.objects.filter(company=request.user.profile.company, key__icontains=validation_group.entity.name + "_" + key)
             return render(request, 'edit_validation_group.html', {"validation_group_rule": validation_group_rule, "OPERATORS": OPERATORS, "step": step, "entity_attributes": entity_attributes, "values": values, "selected_key": selected_key, "existing_validations": existing_validations, "validation_group": validation_group})
         if request.POST.get('step1-keyselect', False):
-            step = 2
             key = request.POST['key']
             selected_key = key
             values = Picklist.objects.filter(company=request.user.profile.company, key__icontains=validation_group.entity.name + "_" + key)
@@ -453,14 +431,6 @@ def create_ticket(request, id):
             )
         messages.add_message(request, messages.SUCCESS, ('Ticket - ' + new_ticket.TicketNumber + ' - ' + new_ticket.Title + ' created.'))
     return render(request, 'create_ticket.html', {"create_ticket_dict": create_ticket_dict, "contacts": contacts, "services": services, "allocation_codes": allocation_codes, "contracts": contracts, "roles": roles, "resources": resources, "account_types": account_types, "statuses": statuses, "priorities": priorities, "queue_ids": queue_ids, "ticket_sources": ticket_sources, "issue_types": issue_types, "sub_issue_types": sub_issue_types, "slas": slas, "ticket_types": ticket_types, "ataccount": ataccount})
-
-############################################################
-#
-# All custom methods in here (NO VIEWS)
-#
-############################################################
-
-
 
 
 
