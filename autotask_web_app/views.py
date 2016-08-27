@@ -121,6 +121,7 @@ def home(request):
 input_validation_dict = {}
 @subscription_payment_required
 def input_validation(request, id):
+    generate_entities(request, id)
     page = 'validation'
     step = 1
     if request.user:
