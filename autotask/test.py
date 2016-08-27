@@ -14,7 +14,3 @@ class TestLoggedUser(TestCase):
     def test_logged_user_get_homepage(self):
         response = self.client.get(reverse('/'), follow=True)
         self.assertEqual(response.status_code, 200)
-
-    def test_logged_user_get_profile(self):
-        response = self.client.get(reverse('/account/profile/{}').format(self.user.id), follow=True)
-        self.assertEqual(response.status_code, 200)
