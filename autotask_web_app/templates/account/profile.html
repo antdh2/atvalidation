@@ -191,7 +191,8 @@
       </div>
       <!-- END PROFILE CONTENT -->
       <!-- BEGIN AUTOTASK CONTENT -->
-      {% if user.profile.company.id > 1 %}
+      {% if user.profile.company.name == "No Company "%}
+      {% else %}
       <div class="profile-content">
           <div class="row">
               <div class="col-md-12">
@@ -279,6 +280,7 @@
           function create_picklist() {
               console.log("check post is working!") // sanity check
               $("#picklist-messages").append("<div class='note note-info'>Creating picklist module...<strong>DO NOT leave or refresh this page!</strong></div>");
+              $("#picklist-messages").append("<div class='note note-info'>This may take a while depending on the size of your Autotask deployment...</div>");
               $.ajax({
                   url : "{% url 'ajax_create_picklist' %}", // the endpoint
                   type : "POST", // http method
